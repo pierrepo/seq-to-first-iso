@@ -68,10 +68,9 @@ def sequence_parser(file):
         sequences = []
         ignored_lines = 0
         for sequence in filin:
-            upper_sequence = sequence.upper()
+            upper_sequence = sequence.upper().strip()
             # Character not recognized as amino acid.
             if not set(upper_sequence) - AMINO_ACIDS:
-                print(len(upper_sequence))
                 sequences.append(upper_sequence)
             else:
                 ignored_lines += 1
@@ -144,6 +143,124 @@ def compute_M1(f, a):
     return M1
 
 
+def separate_labelled(sequence, unlabelled_aa):
+    """Get the sequence of unlabelled amino acids from a sequence.
+
+    sequence is a string of amino acids
+    unlabelled_aa is a container (list, string...) of unlabelled amino acids
+
+    Return the sequences as a tuple of string with:
+        the sequence without the unlabelled amino acids
+        the unlabelled amino acids in the sequence
+
+    Note: we can also use comprehension lists (might go faster)
+    labelled_seq = "".join([char in sequence if char not in unlabelled_aa])
+    unlabelled_seq = "".join([char in sequence if char in unlabelled_aa])
+    """
+    labelled_seq = []
+    unlabelled_seq = []
+    for char in sequence:
+        if char in unlabelled_aa:
+            unlabelled_seq.append(char)
+        else:
+            labelled_seq.append(char)
+    return "".join(labelled_seq), "".join(unlabelled_seq)
+
+
+def compute_M0_nl(f_l, f_nl, a_l, a_nl):
+    """Return the monoisotopic abundance M0 of a sequence with mixed labels.
+
+    f_l is the chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}
+    a_l is the abundance of isotopes, as a dict in the format:
+        {element_name[isotope_number]: relative abundance, ..}
+
+    Assuming a_l[element] == a_nl[element] for element != "C"
+    """
+    n_H = f_l["H"] + f_nl["H"]
+    n_N = f_l["N"] + f_nl["N"]
+    n_O = f_l["O"] + f_nl["O"]
+    n_S = f_l["S"] + f_nl["S"]
+
+    M0 = a_l["C[12]"]**f_l["C"] * a_nl["C[12]"]**f_nl["C"] \
+        * a_l["H[1]"]**n_H \
+        * a_l["N[14]"]**n_N \
+        * a_l["O[16]"]**n_O \
+        * a_l["S[32]"]**n_S
+
+    return M0
+
+
+def compute_M1_nl(f_l, f_nl, a_l, a_nl):
+    """Compute abundance of second isotopologue M1 from its formula.
+
+    f is the chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}
+    a is the abundance of isotopes, as a dict in the format:
+        {element_name[isotope_number]: relative abundance, ..}
+
+    Assuming a_l[element] == a_nl[element] for element != "C"
+    """
+    n_H = f_l["H"] + f_nl["H"]
+    n_N = f_l["N"] + f_nl["N"]
+    n_O = f_l["O"] + f_nl["O"]
+    n_S = f_l["S"] + f_nl["S"]
+
+    M1 = (
+          (f_l["C"] * a_l["C[12]"]**(f_l["C"]-1) * a_l["C[13]"]
+              * a_nl["C[12]"]**f_nl["C"]
+              * a_l["H[1]"]**n_H
+              * a_l["N[14]"]**n_N
+              * a_l["O[16]"]**n_O
+              * a_l["S[32]"]**n_S)
+
+          + (f_nl["C"] * a_l["C[12]"]**f_l["C"]
+              * a_nl["C[12]"]**(f_nl["C"]-1) * a_nl["C[13]"]
+              * a_l["H[1]"]**n_H
+              * a_l["N[14]"]**n_N
+              * a_l["O[16]"]**n_O
+              * a_l["S[32]"]**n_S)
+
+          + (n_H * a_l["C[12]"]**f_l["C"]
+              * a_nl["C[12]"]**f_nl["C"]
+              * a_l["H[1]"]**(n_H-1) * a_l["H[2]"]
+              * a_l["N[14]"]**n_N
+              * a_l["O[16]"]**n_O
+              * a_l["S[32]"]**n_S)
+
+          + (n_N * a_l["C[12]"]**f_l["C"]
+              * a_nl["C[12]"]**f_nl["C"]
+              * a_l["H[1]"]**n_H
+              * a_l["N[14]"]**(n_N-1) * a_l["N[15]"]
+              * a_l["O[16]"]**n_O
+              * a_l["S[32]"]**n_S)
+
+          + (n_O * a_l["C[12]"]**f_l["C"]
+              * a_nl["C[12]"]**f_nl["C"]
+              * a_l["H[1]"]**n_H
+              * a_l["N[14]"]**n_N
+              * a_l["O[16]"]**(n_O-1) * a_l["O[17]"]
+              * a_l["S[32]"]**n_S)
+
+          + (n_S * a_l["C[12]"]**f_l["C"]
+              * a_nl["C[12]"]**f_nl["C"]
+              * a_l["H[1]"]**n_H
+              * a_l["N[14]"]**n_N
+              * a_l["O[16]"]**n_O
+              * a_l["S[32]"]**(n_S-1) * a_l["S[33]"])
+         )
+
+    return M1
+
+
+def composition_to_str(composition):
+    """Return formula from Composition as a string."""
+    out = ""
+    for k, v in composition.items():
+        out += (str(k)+str(v))
+    return out
+
+
 if __name__ == "__main__":
     # Default isotopic abundances from MIDAs website:
     # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
@@ -188,4 +305,4 @@ if __name__ == "__main__":
         output_file = options.output
 
     # Import dataframe to tsv file.
-    df_peptides.to_csv(output_file, sep="\t")
+    df_peptides.to_csv(output_file, sep="\t", index=False)
