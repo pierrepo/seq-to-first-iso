@@ -58,16 +58,21 @@ def user_input():
 
     # Check if amino acids are correct.  If not, tell which one.
     unlabelled_aa = options.non_labelled_aa
-    options.non_labelled_aa = [char.upper() for char in unlabelled_aa]
-    unrecognized_aa = []
+    if not unlabelled_aa:
+        # Change to empty list to avoid Nonetype errors.
+        options.non_labelled_aa = []
+    elif unlabelled_aa:
+        # Convert amino acids to uppercase for compatibility.
+        options.non_labelled_aa = [char.upper() for char in unlabelled_aa]
+        unrecognized_aa = []
 
-    for arg in options.non_labelled_aa:
-        if arg not in AMINO_ACIDS:
-            unrecognized_aa.append(arg)
+        for arg in options.non_labelled_aa:
+            if arg not in AMINO_ACIDS:
+                unrecognized_aa.append(arg)
 
-    if unrecognized_aa:
-        print("Warning: {} not recognized "
-              "as amino acid".format(unrecognized_aa))
+        if unrecognized_aa:
+            print("Warning: {} not recognized "
+                  "as amino acid".format(unrecognized_aa))
 
     return options
 
@@ -183,8 +188,7 @@ def separate_labelled(sequence, unlabelled_aa):
 
 
 def compute_M0_nl(f, a):
-    """Return the monoisotopic abundance M0 of a sequence with labelled and
-    non labelled amino acids.
+    """Return the monoisotopic abundance M0 of a formula with mixed labels.
 
     f is the chemical formula, as a dict of counts for each element:
         {element_name: count_of_element_in_sequence, ...}
@@ -270,7 +274,7 @@ def seq_to_midas(sequence_l, sequence_nl):  # ADDED
     Note: the function assumes the second sequence has no terminii.
     """
     formula_l = mass.Composition(sequence_l)
-    formula_nl = mass.Composition(parsed_sequence = sequence_nl)
+    formula_nl = mass.Composition(parsed_sequence=sequence_nl)
     try:
         formula_nl["X"] = formula_nl.pop("C")
     except KeyError:
@@ -333,7 +337,7 @@ if __name__ == "__main__":
     # Formula as a string (instead of mass.Composition).
     df_peptides["f"] = df_peptides["sequence"].apply(mass.Composition)
     df_peptides["formula"] = df_peptides["f"].apply(formula_to_str)
-    # Composition, with unlabelled C as element X. 
+    # Composition, with unlabelled C as element X.
     df_peptides["f_X"] = df_peptides.apply(lambda x:
                                            seq_to_midas(x["labelled"],
                                                         x["unlabelled"]),
