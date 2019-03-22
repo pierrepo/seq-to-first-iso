@@ -1,0 +1,10 @@
+name: SLIM
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pyteomics=4.0.1
+  - matplotlib
+  - pandas=0.24.1
+  - python=3.7
