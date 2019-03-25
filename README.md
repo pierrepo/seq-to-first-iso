@@ -84,7 +84,7 @@ Provide a help page
 Change the name of the output file
 
 - `-n, --non_labelled_aa`:  
-Take 1 or more amino acid separated by a space
+Take 1 or more amino acid separated by a comma
 
 ### Examples
 
@@ -100,7 +100,7 @@ LAMVIIKEFVDDLK
 
 The command
 ```shell
-$ python seq-to-first-iso.py peptides.txt -n V W
+$ python seq-to-first-iso.py peptides.txt -n V,W
 ```
 will create _peptides.tsv_ :
 

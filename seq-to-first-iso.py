@@ -43,9 +43,9 @@ def user_input():
     parser.add_argument("input", type=Path, help="file to parse")
 
     # Optional arguments.
-    parser.add_argument("-o", "--output", nargs="?", type=Path,
+    parser.add_argument("-o", "--output", type=Path,
                         help="name of output file")
-    parser.add_argument("-n", "--non_labelled_aa", nargs="+",
+    parser.add_argument("-n", "--non_labelled_aa",
                         metavar="amino_a",
                         help="amino acids with default abundance")
 
@@ -57,13 +57,14 @@ def user_input():
             options.input, options.input.cwd()) + USAGE_ERROR)
 
     # Check if amino acids are correct.  If not, tell which one.
-    unlabelled_aa = options.non_labelled_aa
-    if not unlabelled_aa:
+    if not options.non_labelled_aa:
         # Change to empty list to avoid Nonetype errors.
         options.non_labelled_aa = []
-    elif unlabelled_aa:
+    else:
+        options.non_labelled_aa = options.non_labelled_aa.split(",")
         # Convert amino acids to uppercase for compatibility.
-        options.non_labelled_aa = [char.upper() for char in unlabelled_aa]
+        options.non_labelled_aa = [char.upper()
+                                   for char in options.non_labelled_aa]
         unrecognized_aa = []
 
         for arg in options.non_labelled_aa:
