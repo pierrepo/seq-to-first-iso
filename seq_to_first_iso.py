@@ -1,10 +1,15 @@
 
 """Create a tsv file from a file of sequences.
 
-Read a file composed of sequences of amino acids on each line and
-return sequence, mass, formula, M0 and M1 in normal and C[12] conditions
+Read a file composed of sequences of amino acids on each line and return :
+    sequence,
+    mass,
+    normal formula and formula with unlabelled amino acids,
+    M0 and M1 in normal and C[12] conditions
 as a tsv file.
 
+Unlabelled amino acids's carbons keep default isotopic abundance,
+and are represented as X in formulas.
 Naming conventions for isotopes follow pyteomics's conventions.
 """
 
@@ -12,7 +17,7 @@ __authors__ = "Lilian Yang-crosson"
 __copyright__ = ""
 __credits__ = [""]
 __license__ = ""
-__version__ = "0.1"
+__version__ = "0.1.0"
 __maintainer__ = ""
 __email__ = ""
 
@@ -25,17 +30,28 @@ from pyteomics import mass
 
 USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
              + "[-o output] [-n aa]"
-# Note: pyteomics also have H- and -OH that can be used for sequences
-# which are not supported in this version.  They are implicitly added.
-AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWYUO")
+# Note: pyteomics also have U, O, H- and -OH that can be used for sequences
+# which are not supported in this version.
+AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
+
+# Default isotopic abundances from MIDAs website:
+# https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
+# X is C with default abundance.
+isotopic_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
+                      "C[12]": 0.9893,  "C[13]": 0.0107,
+                      "X[12]": 0.9893,  "X[13]": 0.0107,
+                      "N[14]": 0.99632, "N[15]": 0.00368,
+                      "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
+                      "S[32]": 0.9493,  "S[33]": 0.0076,  "S[34]": 0.0429}
+
+C12_abundance = dict(isotopic_abundance)
+prop = 0.9999
+C12_abundance["C[12]"] = prop
+C12_abundance["C[13]"] = 1-prop
 
 
 def user_input():
-    """
-    Handle the user parameter from the command line.
-
-    Parse the command line parameter and build the list of input files.
-    """
+    """Parse and handle the submitted command line."""
     parser = argparse.ArgumentParser(
         description="Read a file of sequences and creates a tsv file")
 
@@ -79,10 +95,10 @@ def user_input():
 
 
 def sequence_parser(file):
-    """Return a list of peptide sequences parsed from a file.
+    """Return a tuple (sequences:list, ignored_lines:int) parsed from a file.
 
     Take a Path() object as argument, return a list of uppercase peptides
-    or exit if the list is empty.
+    and the number of ignored lines.
     """
     # Obtain a list of sequences as string if they are amino acids.
     with open(file, "r") as filin:
@@ -96,15 +112,7 @@ def sequence_parser(file):
             else:
                 ignored_lines += 1
 
-    # Check if the file format is correct.
-    if not sequences:
-        exit("Error: incorrect format, make sure that lines "
-             "in {} are valid sequences of amino acids".format(file))
-    if ignored_lines:
-        print("{} lines ignored out of {}".format(ignored_lines,
-                                                  ignored_lines+len(sequences)
-                                                  ))
-    return sequences
+    return sequences, ignored_lines
 
 
 def compute_M0(f, a):
@@ -296,32 +304,12 @@ def formula_to_midas(formula_l, formula_nl):
     return formula_l+f2
 
 
-if __name__ == "__main__":
-    # Default isotopic abundances from MIDAs website:
-    # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
-    # X is C with default abundance
-    isotopic_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
-                          "C[12]": 0.9893,  "C[13]": 0.0107,
-                          "X[12]": 0.9893,  "X[13]": 0.0107,
-                          "N[14]": 0.99632, "N[15]": 0.00368,
-                          "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
-                          "S[32]": 0.9493,  "S[33]": 0.0076,  "S[34]": 0.0429}
+def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
+    """Create a tsv from sequences and return its name.
 
-    C12_abundance = dict(isotopic_abundance)
-    prop = 0.9999
-    C12_abundance["C[12]"] = prop
-    C12_abundance["C[13]"] = 1-prop
-
-    options = user_input()
-    input_file = options.input
-    unlabelled_aa = options.non_labelled_aa
-
-    if unlabelled_aa:
-        print("Amino acid with default abundance: {}".format(unlabelled_aa))
-
-    print("Parsing file")
-    sequences = sequence_parser(input_file)
-
+    Take a list of amino acid sequences, a string for the output filename
+    and a list of unlabelled amino acids.
+    """
     # Dataframe of sequences.
     df_peptides = pd.DataFrame({"sequence": sequences})
 
@@ -360,13 +348,43 @@ if __name__ == "__main__":
     # For verification with MIDAs, might be removed.
     df_peptides["formula_X"] = df_peptides["f_X"].apply(formula_to_str)
 
+    wanted_columns = ["sequence", "mass", "formula", "formula_X",
+                      "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
+    # Import dataframe to tsv file.
+    df_peptides[wanted_columns].to_csv(output_file, sep="\t", index=False)
+
+    return output_file
+
+
+def seq_to_first_iso_cli():
+    """Entry point for seq_to_first_iso's CLI."""
+    options = user_input()
+    input_file = options.input
+    unlabelled_aa = options.non_labelled_aa
+
+    if unlabelled_aa:
+        print("Amino acid with default abundance: {}".format(unlabelled_aa))
+
+    print("Parsing file")
+    sequences, ignored_lines = sequence_parser(input_file)
+
+    if not sequences:
+        exit(f"Error: incorrect format, make sure that lines "
+             "in {str(input_file)} are valid sequences of amino acids")
+    if ignored_lines:
+        print("{} lines ignored out of {}".format(ignored_lines,
+                                                  ignored_lines+len(sequences)
+                                                  ))
+
     # Choose output filename.
     if not options.output:
         output_file = input_file.stem + ".tsv"
     else:
         output_file = options.output
 
-    wanted_columns = ["sequence", "mass", "formula", "formula_X",
-                      "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
-    # Import dataframe to tsv file.
-    df_peptides[wanted_columns].to_csv(output_file, sep="\t", index=False)
+    seq_to_tsv(sequences, output_file, unlabelled_aa)
+
+
+if __name__ == "__main__":
+    seq_to_first_iso_cli()
+
