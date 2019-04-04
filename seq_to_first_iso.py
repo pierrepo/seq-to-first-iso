@@ -22,6 +22,7 @@ __maintainer__ = ""
 __email__ = ""
 
 import argparse
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -33,6 +34,16 @@ USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
 # Note: pyteomics also have U, O, H- and -OH that can be used for sequences
 # which are not supported in this version.
 AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
+
+# Set custom logger.
+log = logging.getLogger(__name__)
+log_handler = logging.StreamHandler()
+log_formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s: %(message)s",
+                                  "%Y-%m-%d, %H:%M:%S")
+log_handler.setFormatter(log_formatter)
+log.addHandler(log_handler)
+log.setLevel(logging.INFO)
+
 
 # Default isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
@@ -69,8 +80,10 @@ def user_input():
 
     # Check if file exists.
     if not options.input.is_file():
-        exit("Error: file {} does not exist in current directory {}\n".format(
-            options.input, options.input.cwd()) + USAGE_ERROR)
+        log.error(f"file {options.input} does not exist in "
+                  f"current directory '{options.input.cwd()}'\n{USAGE_ERROR}"
+                  )
+        exit()
 
     # Check if amino acids are correct.  If not, tell which one.
     if not options.non_labelled_aa:
@@ -88,8 +101,8 @@ def user_input():
                 unrecognized_aa.append(arg)
 
         if unrecognized_aa:
-            print("Warning: {} not recognized "
-                  "as amino acid".format(unrecognized_aa))
+            log.warning(f"{unrecognized_aa} not recognized as amino acid")
+
 
     return options
 
@@ -319,10 +332,10 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
                                            unlabelled_aa=unlabelled_aa))
 
     # Add mass and formulas of sequences
-    print("Computing mass")
+    log.info("Computing mass")
     df_peptides["mass"] = df_peptides["sequence"].map(mass.calculate_mass)
 
-    print("Computing formula")
+    log.info("Computing formula")
     # Formula as a string (instead of mass.Composition).
     df_peptides["f"] = df_peptides["sequence"].apply(mass.Composition)
     df_peptides["formula"] = df_peptides["f"].apply(formula_to_str)
@@ -333,7 +346,7 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
                                            axis=1)
 
     # Add M0 and M1 in normal conditions.
-    print("Computing M0 and M1")
+    log.info("Computing M0 and M1")
     # Can use compute_M0_nl with isotopic abundance twice
     df_peptides["M0_NC"] = df_peptides["f_X"].apply(compute_M0_nl,
                                                     a=isotopic_abundance)
@@ -356,25 +369,25 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
     return output_file
 
 
-def seq_to_first_iso_cli():
+def cli():
     """Entry point for seq_to_first_iso's CLI."""
     options = user_input()
     input_file = options.input
     unlabelled_aa = options.non_labelled_aa
 
     if unlabelled_aa:
-        print("Amino acid with default abundance: {}".format(unlabelled_aa))
+        log.info(f"Amino acid with default abundance: {unlabelled_aa}")
 
-    print("Parsing file")
+    log.info("Parsing file")
     sequences, ignored_lines = sequence_parser(input_file)
 
     if not sequences:
-        exit(f"Error: incorrect format, make sure that lines "
-             "in {str(input_file)} are valid sequences of amino acids")
+        log.error(f"incorrect format, make sure that lines "
+                  f"in {str(input_file)} are valid sequences of amino acids")
+        exit()
     if ignored_lines:
-        print("{} lines ignored out of {}".format(ignored_lines,
-                                                  ignored_lines+len(sequences)
-                                                  ))
+        log.warning(f"{ignored_lines} lines ignored out of " 
+                    f"{ignored_lines+len(sequences)}")
 
     # Choose output filename.
     if not options.output:
@@ -386,5 +399,5 @@ def seq_to_first_iso_cli():
 
 
 if __name__ == "__main__":
-    seq_to_first_iso_cli()
+    cli()
 
