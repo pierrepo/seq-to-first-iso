@@ -1,0 +1,11 @@
+
+# input files
+*.txt
+!LICENSE.txt
+
+# output files
+*.tsv
+
+# Files for packaging
+*.egg-info
+

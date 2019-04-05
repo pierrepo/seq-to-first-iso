@@ -3,7 +3,7 @@
 > Compute first isotopologues intensity from peptide sequence
 
 ## Contents
-- [Background](#background)
+- [About](#about)
 - [Installation](#installation)
   - [With a virtual environment](#with-a-virtual-environment)
   - [Manually](#manually)
@@ -12,16 +12,11 @@
   - [Examples](#examples)
 - [Credits](#credits)
 
-## Background
+## About
 
 [(Back to top)](#contents)
 
-<!--GET IMAGE OF SPECTRO ? One of the main challenge of mass spectrometry is the identification of peptides
-Isotopologues are molecules that differ only in their isotopic composition  
-**seq-to-first-iso** aims to provide a way to compute M0 and M1 in 12C conditions with unlabelled amino acids  
-More details here or other section ?
-This project is based on... (SLIM)
-SAY THAT ABUNDANCES ARE C ONLY, AND WHAT THEY ARE (establish convention: M0_NC, 12C, formula_X)-->
+
 
 ## Installation
 
@@ -69,7 +64,7 @@ The script takes a file with one sequence of amino acids per line and returns a 
 The script can be called with:
 
 ```shell
-$ python seq-to-first-iso.py filename [-o output_name] [-n amino_acids...]
+$ python seq_to_first_iso.py filename [-o output_name] [-n amino_acids...]
 ```
 Optional arguments are in square brackets  
 This will create _filename.tsv_ if filename is a correct file
@@ -100,7 +95,7 @@ LAMVIIKEFVDDLK
 
 The command
 ```shell
-$ python seq-to-first-iso.py peptides.txt -n V,W
+$ python seq_to_first_iso.py peptides.txt -n V,W
 ```
 will create _peptides.tsv_ :
 
@@ -116,7 +111,7 @@ Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12
 - You can change the name of the output file:
 
 ```shell
-$ python seq-to-first-iso.py peptides.txt -o sequence
+$ python seq_to_first_iso.py peptides.txt -o sequence
 ```
 will create a file named _sequence.tsv_
 
