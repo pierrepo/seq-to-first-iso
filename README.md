@@ -26,6 +26,12 @@ Create conda environment:
 $ conda env create -f environment.yml
 ```
 
+Remarque: for a fully reproducible environment, you could also use:
+```
+$ conda env create -f environment.lock.yml
+```
+
+
 Activate conda environment:
 ```
 $ conda activate seq-to-first-iso
