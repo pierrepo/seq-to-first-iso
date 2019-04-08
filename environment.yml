@@ -1,10 +1,20 @@
-name: SLIM
+name: seq-to-first-iso
+# channels priority
+# see https://bioconda.github.io/
+# conda-forge has highest prioriy
 channels:
-  - conda-forge
-  - bioconda
   - defaults
+  - bioconda
+  - conda-forge
 dependencies:
-  - pyteomics=4.0.1
-  - matplotlib
-  - pandas=0.24.1
   - python=3.7
+  - pyteomics
+  - matplotlib
+  - pandas
+  - pycodestyle
+  - pydocstyle
+  - pylint
+  - twine
+  - bumpversion
+  - pytest
+  - pytest-cov
