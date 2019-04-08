@@ -2,60 +2,42 @@
 
 > Compute first isotopologues intensity from peptide sequence
 
-## Contents
-- [About](#about)
-- [Installation](#installation)
-  - [With a virtual environment](#with-a-virtual-environment)
-  - [Manually](#manually)
-- [Usage](#usage)
-  - [Options](#options)
-  - [Examples](#examples)
-- [Credits](#credits)
-
-## About
-
-[(Back to top)](#contents)
-
-
-
 ## Installation
 
-[(Back to top)](#contents)
+### pip-based
 
-**Note**: this is the installation process for LINUX machines, depending on your operating system, the commands might differ
-
-### With a virtual environment
-
-This tutorial uses [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html "conda installation guide") to set up the packages in a virtual environment
-
-- Download _environment.yml_
-- After going in the directory containing _environment.yml_, create the environment with:
-
-```shell
-$ conda env create --file environment.yml
 ```
-You should now have a conda environment named SLIM
-To go into the environment, type:
-
-```shell
-$ conda activate SLIM
+$ pip install seq-to-first-iso
 ```
-You should now be able to use the script inside the environment
 
-### Manually
+### Developer mode
 
-**Download the following prerequesites:**
 
-- [Python](https://www.python.org/downloads/) 3.7 or higher
-- [pyteomics](https://pyteomics.readthedocs.io/en/latest/) 4.0 or higher
-- [pandas](https://pandas.pydata.org/) 0.24 or higher
+Install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
+Clone repo:
+```
+$ git clone https://github.com/pierrepo/seq-to-first-iso
+$ cd seq-to-first-iso
+```
+
+Create conda environment:
+```
+$ conda env create -f environment.yml
+```
+
+Activate conda environment:
+```
+$ conda activate seq-to-first-iso
+```
+
+Install local package:
+```
+$ pip install -e .
+```
 
 ## Usage
 
-[(Back to top)](#contents)
-
-**If you installed with conda, make sure to activate the conda environment**  
 The script takes a file with one sequence of amino acids per line and returns a tsv of the file with columns:
 
 |sequence|mass|formula|formula_X| M0_NC | M1_NC | M0_12C | M1_12C |
@@ -81,11 +63,12 @@ Change the name of the output file
 - `-n, --non_labelled_aa`:  
 Take 1 or more amino acid separated by a comma
 
+
 ### Examples
 
 - You can provide a list of amino acids which will keep default isotopic abundance:
 
-Supposing _peptides.txt_ :
+Supposing *peptides.txt* :
 
 ```
 YAQEISR
@@ -97,7 +80,7 @@ The command
 ```shell
 $ python seq_to_first_iso.py peptides.txt -n V,W
 ```
-will create _peptides.tsv_ :
+will create *peptides.tsv* :
 
 |sequence| mass| formula| M0_NC| M1_NC| M0_12C| M1_12C|
 |--------|-----|--------|------|------|-------|-------|
@@ -105,7 +88,7 @@ YAQEISR| 865.42938099921| C37H59O13N11| 0.6206414140575179|	0.280870823368276| 0
 VGFPVLSVKEHK| 1338.7659712609| C63H102O16N16| 0.4550358985377136| 0.34506032928190855| 0.7589558393662944| 0.18515489894512063|
 LAMVIIKEFVDDLK| 1632.91606619252| C76H128O21N16S1| 0.36994021481230627| 0.3373188347614264| 0.7475090558698947| 0.15292723586285323|
 
-Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12C are computed with unlabelled Valine and Tryptophan  (V and W have default isotopic abundance)
+Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12C are computed with unlabelled Valine and Tryptophan (V and W have default isotopic abundance)
 
 
 - You can change the name of the output file:
@@ -113,7 +96,8 @@ Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12
 ```shell
 $ python seq_to_first_iso.py peptides.txt -o sequence
 ```
-will create a file named _sequence.tsv_
+will create a file named *sequence.tsv*
+
 
 ## Credits
 

@@ -13,6 +13,10 @@ Activate env:
 $ conda activate seq-to-first-iso
 ```
 
+Export fully reproductible conda environment:
+```
+$ conda env export > environment.lock.yml
+```
 
 ## Tests
 
