@@ -49,10 +49,10 @@ The script takes a file with one sequence of amino acids per line and returns a 
 |sequence|mass|formula|formula_X| M0_NC | M1_NC | M0_12C | M1_12C |
 |--------|----|-------|---------|-------|-------|--------|--------|
 
-The script can be called with:
+Once installed, the script can be called with:
 
 ```shell
-$ python seq_to_first_iso.py filename [-o output_name] [-n amino_acids...]
+$ seq-to-first-iso filename [-o output_name] [-n amino_acids...]
 ```
 Optional arguments are in square brackets  
 This will create _filename.tsv_ if filename is a correct file
@@ -88,11 +88,11 @@ $ python seq_to_first_iso.py peptides.txt -n V,W
 ```
 will create *peptides.tsv* :
 
-|sequence| mass| formula| M0_NC| M1_NC| M0_12C| M1_12C|
-|--------|-----|--------|------|------|-------|-------|
-YAQEISR| 865.42938099921| C37H59O13N11| 0.6206414140575179|	0.280870823368276| 0.9206561231798033| 0.05161907174495234|
-VGFPVLSVKEHK| 1338.7659712609| C63H102O16N16| 0.4550358985377136| 0.34506032928190855| 0.7589558393662944| 0.18515489894512063|
-LAMVIIKEFVDDLK| 1632.91606619252| C76H128O21N16S1| 0.36994021481230627| 0.3373188347614264| 0.7475090558698947| 0.15292723586285323|
+|sequence| mass| formula|formula_X| M0_NC| M1_NC| M0_12C| M1_12C|
+|--------|-----|--------|---------|------|------|-------|-------|
+YAQEISR| 865.42938099921| C37H59O13N11| C37H59O13N11| 0.6206414140575179|	0.280870823368276| 0.9206561231798033| 0.05161907174495234|
+VGFPVLSVKEHK| 1338.7659712609| C63H102O16N16| C48H102O16N16X15|  0.4550358985377136| 0.34506032928190855| 0.7589558393662944| 0.18515489894512063|
+LAMVIIKEFVDDLK| 1632.91606619252| C76H128O21N16S1| C66H128O21N16S1X10| 0.36994021481230627| 0.3373188347614264| 0.7475090558698947| 0.15292723586285323|
 
 Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12C are computed with unlabelled Valine and Tryptophan (V and W have default isotopic abundance)
 
@@ -107,7 +107,6 @@ will create a file named *sequence.tsv*
 
 ## Credits
 
-[(Back to top)](#contents)
 
 - **Bioconda**:
   - Grüning, Björn, Ryan Dale, Andreas Sjödin, Brad A. Chapman, Jillian Rowe, Christopher H. Tomkins-Tinch, Renan Valieris, the Bioconda Team, and Johannes Köster. 2018. “Bioconda: Sustainable and Comprehensive Software Distribution for the Life Sciences”. Nature Methods, 2018 doi:10.1038/s41592-018-0046-7.

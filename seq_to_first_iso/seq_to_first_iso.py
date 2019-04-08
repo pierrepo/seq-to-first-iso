@@ -72,7 +72,7 @@ def user_input():
     # Optional arguments.
     parser.add_argument("-o", "--output", type=Path,
                         help="name of output file")
-    parser.add_argument("-n", "--non_labelled_aa",
+    parser.add_argument("-n", "--non-labelled-aa",
                         metavar="amino_a",
                         help="amino acids with default abundance")
 
