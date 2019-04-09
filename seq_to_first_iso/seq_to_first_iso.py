@@ -194,10 +194,6 @@ def separate_labelled(sequence, unlabelled_aa):
     Return the sequences as a tuple of string with:
         the sequence without the unlabelled amino acids
         the unlabelled amino acids in the sequence
-
-    Note: we can also use comprehension lists (might go faster)
-    labelled_seq = "".join([char in sequence if char not in unlabelled_aa])
-    unlabelled_seq = "".join([char in sequence if char in unlabelled_aa])
     """
     labelled_seq = []
     unlabelled_seq = []
@@ -290,7 +286,7 @@ def formula_to_str(composition):
     return formula_str
 
 
-def seq_to_midas(sequence_l, sequence_nl):  # ADDED
+def seq_to_midas(sequence_l, sequence_nl):
     """Take 2 amino acid sequences and return the formula for MIDAs.
 
     Note: the function assumes the second sequence has no terminii.
@@ -302,19 +298,6 @@ def seq_to_midas(sequence_l, sequence_nl):  # ADDED
     except KeyError:
         pass
     return formula_l+formula_nl
-
-
-def formula_to_midas(formula_l, formula_nl):
-    """Take 2 chemical formulas and return the formula for MIDAs.
-
-    Note: can adapt to take sequence to composition.
-    """
-    f2 = mass.Composition(formula_nl)  # to not change formula2
-    try:
-        f2["X"] = f2.pop("C")  # Based on the assumption there are C.
-    except KeyError:
-        pass
-    return formula_l+f2
 
 
 def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):

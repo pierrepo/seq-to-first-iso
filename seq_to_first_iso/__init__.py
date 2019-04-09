@@ -26,7 +26,6 @@ from .seq_to_first_iso import (AMINO_ACIDS,
                                compute_M1_nl,
                                formula_to_str,
                                seq_to_midas,
-                               formula_to_midas,
                                seq_to_tsv,
                                )
 __all__ = ["AMINO_ACIDS",
@@ -38,5 +37,4 @@ __all__ = ["AMINO_ACIDS",
            "compute_M1_nl",
            "formula_to_str",
            "seq_to_midas",
-           "formula_to_midas",
            "seq_to_tsv",]
