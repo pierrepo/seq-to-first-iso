@@ -70,7 +70,7 @@ def user_input():
     parser.add_argument("input", type=Path, help="file to parse")
 
     # Optional arguments.
-    parser.add_argument("-o", "--output", type=Path,
+    parser.add_argument("-o", "--output", type=str,
                         help="name of output file")
     parser.add_argument("-n", "--non-labelled-aa",
                         metavar="amino_a",
@@ -102,7 +102,6 @@ def user_input():
 
         if unrecognized_aa:
             log.warning(f"{unrecognized_aa} not recognized as amino acid")
-
 
     return options
 
@@ -369,18 +368,17 @@ def cli():
                   f"in {str(input_file)} are valid sequences of amino acids")
         exit()
     if ignored_lines:
-        log.warning(f"{ignored_lines} lines ignored out of " 
+        log.warning(f"{ignored_lines} lines ignored out of "
                     f"{ignored_lines+len(sequences)}")
 
     # Choose output filename.
     if not options.output:
         output_file = input_file.stem + ".tsv"
     else:
-        output_file = options.output
+        output_file = options.output + ".tsv"
 
     seq_to_tsv(sequences, output_file, unlabelled_aa)
 
 
 if __name__ == "__main__":
     cli()
-

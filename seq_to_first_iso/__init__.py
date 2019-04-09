@@ -37,4 +37,5 @@ __all__ = ["AMINO_ACIDS",
            "compute_M1_nl",
            "formula_to_str",
            "seq_to_midas",
-           "seq_to_tsv",]
+           "seq_to_tsv",
+           ]
