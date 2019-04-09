@@ -2,10 +2,11 @@
 # input files
 *.txt
 !LICENSE.txt
-!demo/*
+!sample*
 
 # output files
 *.tsv
+!reference*
 
 # Files for packaging
 build/
@@ -13,3 +14,6 @@ build/
 
 # pycache
 __pycache__/
+
+# Tests
+.coverage
