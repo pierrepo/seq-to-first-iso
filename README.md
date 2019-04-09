@@ -66,7 +66,7 @@ Provide a help page
 - `-o, --output`:  
 Change the name of the output file
 
-- `-n, --non_labelled_aa`:  
+- `-n, --non-labelled-aa`:  
 Take 1 or more amino acid separated by a comma
 
 
@@ -74,7 +74,7 @@ Take 1 or more amino acid separated by a comma
 
 - You can provide a list of amino acids which will keep default isotopic abundance:
 
-Supposing *peptides.txt* :
+Supposing [peptides.txt](demo/peptides.txt) :
 
 ```
 YAQEISR
@@ -86,7 +86,7 @@ The command
 ```shell
 $ python seq_to_first_iso.py peptides.txt -n V,W
 ```
-will create *peptides.tsv* :
+will create [peptides.tsv](demo/peptides.tsv) :
 
 |sequence| mass| formula|formula_X| M0_NC| M1_NC| M0_12C| M1_12C|
 |--------|-----|--------|---------|------|------|-------|-------|

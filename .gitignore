@@ -2,6 +2,7 @@
 # input files
 *.txt
 !LICENSE.txt
+!demo/*
 
 # output files
 *.tsv
