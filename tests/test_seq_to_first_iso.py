@@ -214,7 +214,7 @@ def test_main(caplog):
     main_cli([str(test_file), "-nA"])
     assert "Amino acid" in caplog.text
     assert "lines ignored" in caplog.text
-    assert Path("sample_bad_sequence.tsv").is_file()
+    assert Path("sample_sequence.tsv").is_file()
 
     main_cli([str(test_file), "-ooutput"])
     assert Path("output.tsv").is_file()

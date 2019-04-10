@@ -1,0 +1,65 @@
+
+.custom-menu-wrapper {
+          background-color: #808080;
+          margin-bottom: 2.5em;
+          white-space: nowrap;
+          position: relative;
+}
+      
+.custom-menu {
+          display: inline-block;
+          width: auto;
+          vertical-align: middle;
+          -webkit-font-smoothing: antialiased;
+}
+ 
+.custom-menu-top {
+          position: relative;
+          padding-top: .5em;
+          padding-bottom: .5em;
+}
+ 
+
+/*
+Try to align amino acid checkboxes
+*/
+.checkboxes {
+    columns: 3 4;
+}
+
+.checkboxes li {
+    display: block;
+    float: left;
+    width: 25%;
+    font-size: 120%;
+}
+
+/* To have some space between checkboxes. */
+.small-gap input,
+.small-gap label {
+  vertical-align: middle;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.center div{
+  text-align: center;
+}
+
+/* For aligning text with select. */
+.aligned select,
+.aligned p {
+  display: inline;
+  vertical-align: top;
+  line-height: 28px;
+}
+
+body {
+  background: #ddd;
+}
+

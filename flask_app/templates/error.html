@@ -1,0 +1,11 @@
+{% extends "bulma-layout.html" %}
+
+
+{% block content %}
+<div class="content">
+    <h2 class="title">{{ error|default("An error has occured")|safe }}</h2>
+    <p class="subtitle">{{ info|safe|default("") }}</p>
+    <p><a class="button is-primary" href={{ url_for("wtfupload") }}>Go back to uploads</a></p>
+</div>
+
+{% endblock %}

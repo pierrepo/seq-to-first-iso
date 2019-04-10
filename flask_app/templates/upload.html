@@ -1,0 +1,111 @@
+{% extends "bulma-layout.html" %}
+
+{% block content %}
+
+<h1 class="title">Seq to first iso: compute intensities
+    of the two first isotopologues from sequences</h1>
+
+<form method=post enctype=multipart/form-data action="{{ url_for("wtfupload") }}">
+  {{ form.hidden_tag() }}
+
+  <span>
+      <span class="is-size-5">
+        Upload your sequence file (one sequence per line)
+      </span>
+
+      <div class="field">
+        <div class="file has-name is-info">
+          <label class="file-label">
+            {{ form.upload(class="file-input", onchange="displayName()") }}
+            <span class="file-cta">
+              <span class="file-icon">
+                <i class="fas fa-upload"></i>
+              </span>
+              <span class="file-label">
+                Choose file…
+              </span>
+            </span>
+            <span class="file-name" id="filename">
+              ...
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {% for error in form.upload.errors %}
+      <span style="color: red;">[{{ error }}]</span>
+      {% endfor %}
+  </span>
+  <br>
+
+
+  <span class="is-size-5">Choose unlabelled amino acids:</span>
+  <fieldset class="box">
+
+    <span class="aligned">
+      Pre-sets of unlabelled amino acids:
+      <div class="select is-info">
+        <select id="unlabelled" onchange="getDropdown()">
+          <option value="none">None</option>
+          <option value="all">All</option>
+          <option value="homoSapiens">Homo Sapiens</option>
+        </select>
+      </div>
+    </span>
+
+    <div class="small-gap">
+      {{ form.amino_acids(class="checkboxes") }}<br>
+      {% for error in form.amino_acids.errors %}
+      <span style="color: red;">[{{ error }}]</span>
+      {% endfor %}
+    </div>
+
+  </fieldset>
+  <br>
+
+  <p>{{ form.submit(class="button is-primary") }}</p>
+</form>
+
+
+
+<script type="text/javascript">
+  // Retrieve uploaded filename.
+  function displayName(){
+      var file = document.getElementById("upload");
+      if(file.files.length > 0) {
+        document.getElementById("filename").innerHTML = file.files[0].name;
+      }
+  }
+
+  // Automatically check boxes.
+  var essentialAA = {};
+  essentialAA["none"] = [];
+  essentialAA["all"] = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L",
+                        "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"];
+  essentialAA["homoSapiens"] = ["F", "H", "I", "K", "L", "M", "T", "V", "W"];
+
+  function getDropdown(){
+    var dropdown = document.getElementById("unlabelled");
+    var unlabelled = dropdown.options[dropdown.selectedIndex].value;
+
+    if (essentialAA[unlabelled]){
+      toggle(document.getElementsByName("amino_acids"), unlabelled)
+    }
+  }
+
+  function toggle(source, unlabelled){
+    checkboxes = document.getElementsByName("amino_acids")
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+      {# checkboxes[i].value in essentialAA[unlabelled] does not work #}
+      if (essentialAA[unlabelled].includes(checkboxes[i].value)){
+        checkboxes[i].checked = true;
+      }
+      else {
+        checkboxes[i].checked = false;
+      }
+      {# console.log(checkboxes[i]); console.log(checkboxes[i].checked); #}
+    }
+  }
+
+</script>
+{% endblock %}

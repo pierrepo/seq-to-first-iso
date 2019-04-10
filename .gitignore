@@ -17,3 +17,6 @@ __pycache__/
 
 # Tests
 .coverage
+
+# Flask application
+uploads/

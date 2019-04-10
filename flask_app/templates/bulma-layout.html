@@ -1,0 +1,47 @@
+<!doctype html>
+
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+      <title>{{ title|default("seq to first iso") }}</title>
+
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+      {# Used to be able to use icons #}
+      <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+      <link rel="stylesheet" href="{{ url_for("static", filename="custom.css") }}">
+
+      <link rel="shortcut icon" href="{{ url_for("static", filename="favicon.png") }}">
+  </head>
+
+  <body>
+    <div class="columns is-mobile is-centered">
+      <div class="column is-three-fifths" style="background:#fff">
+
+          <div class="custom-menu-wrapper">
+              <div class="pure-menu custom-menu custom-menu-top">
+                <span class="center">
+                  <img src="{{ url_for("static", filename="logo.png") }}" alt="logo">
+                </span>
+              </div>
+          </div>
+
+          {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                  <ul class=flashes>
+                  {% for message in messages %}
+                      <li>{{ message }}</li>
+                  {% endfor %}
+                  </ul>
+              {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+
+
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+
+{% extends "bulma-layout.html" %}
+
+{% block content %}
+
+<meta http-equiv="refresh" content="10">
+
+<div class="content">
+    {% if not download_ready %}
+
+      <h2>Your file has been sucessfully submitted, please wait</h2>
+
+      {% if unlabelled_aa %}
+        <p>{{ "Unlabelled amino acids chosen: %s"|format(unlabelled_aa)}}</p>
+        {% else %}
+        <p> No unlabelled amino acids chosen </p>
+      {% endif %}
+
+        <p>
+          {{ status|default("")}}
+        </p>
+
+        <span class="file-icon">
+          <i class="fas fa-spinner fa-pulse"></i>
+        </span>
+        <br>
+
+        <span>Time elapsed: <span id="counter"></span> s</span>
+        <br>
+
+
+    {% else %}
+
+      <h2> Your file is ready, thank you for your patience </h2>
+      <a class= "button is-primary" target="_blank" rel="noopener noreferrer"
+        href={{ url_for("results", thread_id=thread_id) }}>Click to download</a>
+      <a class= "button is-link" href={{ url_for("wtfupload") }}>Go back to index</a>
+
+
+      {# Stops the reloading and everything after #}
+      <script>
+        sessionStorage.clear()
+        window.stop()
+      </script>
+    {% endif %}
+
+
+    <script>
+    var myVar = setInterval(myTimer, 1000);
+    var count = sessionStorage.getItem("count") || 0;
+    function myTimer() {
+      document.getElementById("counter").innerHTML = count;
+      count ++;
+      sessionStorage.setItem("count", count)
+    }
+    </script>
+</div>
+
+{% endblock %}
