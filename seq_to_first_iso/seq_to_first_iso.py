@@ -24,6 +24,7 @@ __email__ = ""
 import argparse
 import logging
 from pathlib import Path
+import sys
 
 import pandas as pd
 from pyteomics import mass
@@ -61,7 +62,7 @@ C12_abundance["C[12]"] = prop
 C12_abundance["C[13]"] = 1-prop
 
 
-def user_input():
+def user_input(args):
     """Parse and handle the submitted command line."""
     parser = argparse.ArgumentParser(
         description="Read a file of sequences and creates a tsv file")
@@ -76,7 +77,7 @@ def user_input():
                         metavar="amino_a",
                         help="amino acids with default abundance")
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
 
     # Check if file exists.
     if not options.input.is_file():
@@ -299,7 +300,7 @@ def seq_to_midas(sequence_l, sequence_nl):
     return formula_l+formula_nl
 
 
-def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
+def seq_to_tsv(sequences, output_file, unlabelled_aa):
     """Create a tsv from sequences and return its name.
 
     Take a list of amino acid sequences, a string for the output filename
@@ -351,9 +352,12 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa=[]):
     return output_file
 
 
-def cli():
+def cli(args=None):
     """Entry point for seq_to_first_iso's CLI."""
-    options = user_input()
+    if not args:
+        args = sys.argv[1:]
+
+    options = user_input(args)
     input_file = options.input
     unlabelled_aa = options.non_labelled_aa
 

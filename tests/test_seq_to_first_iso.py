@@ -134,8 +134,24 @@ def test_separation():
     assert test_long == ("ABEFG", "CDCDCDDC")
     assert test_empty == ("", "")
 
+def test_deprecated_computation_isotopologue():
+    test_composition = mass.Composition("ACDE")
+    stfi.compute_M0 = stfi.seq_to_first_iso.compute_M0
+    stfi.compute_M1 = stfi.seq_to_first_iso.compute_M1
+    assert stfi.compute_M0(test_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
+
+    assert stfi.compute_M1(test_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
+
+
+def test_formula_X():
+    assert stfi.seq_to_midas("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
+    assert stfi.seq_to_midas("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
+
 
 def test_computation_isotopologue():
+    # Standard formula.
     test_composition = mass.Composition("ACDE")
     assert stfi.compute_M0_nl(test_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
     assert stfi.compute_M0_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
@@ -143,10 +159,12 @@ def test_computation_isotopologue():
     assert stfi.compute_M1_nl(test_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
     assert stfi.compute_M1_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
 
+    unlabelled_composition = stfi.seq_to_midas("AC", "DE")
+    assert stfi.compute_M0_nl(unlabelled_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0_nl(unlabelled_composition, stfi.C12_abundance) == pytest.approx(0.8279079739944033, REL)
 
-def test_formula_X():
-    assert stfi.seq_to_midas("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
-    assert stfi.seq_to_midas("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
+    assert stfi.compute_M1_nl(unlabelled_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1_nl(unlabelled_composition, stfi.C12_abundance) == pytest.approx(0.10507024116588572, REL)
 
 
 def test_string_casting():
@@ -160,12 +178,50 @@ def test_seq_to_tsv():
     sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
     output_file = data_dir.joinpath("output.tsv")
     unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
-    assert stfi.seq_to_tsv(sequences_given, output_file)
+    assert stfi.seq_to_tsv(sequences_given, output_file, unlabelled_aa=[])
     assert output_file.is_file()
-    assert stfi.seq_to_tsv(sequences_given, unlabelled_output_file, "AT")
+    assert stfi.seq_to_tsv(sequences_given, unlabelled_output_file, unlabelled_aa="AT")
     assert unlabelled_output_file.is_file()
 
     assert data_dir.joinpath("reference_sequence.tsv")
     assert filecmp.cmp(output_file, data_dir.joinpath("reference_sequence.tsv"), shallow=False)
     assert data_dir.joinpath("reference_sequence_AT.tsv")
     assert filecmp.cmp(unlabelled_output_file, data_dir.joinpath("reference_sequence_AT.tsv"), shallow=False)
+
+
+def test_cli_parser(caplog):
+    cli_parser = stfi.seq_to_first_iso.user_input
+    test_file = data_dir.joinpath("sample_sequence.txt")
+
+    assert cli_parser([str(test_file)])
+    with pytest.raises(SystemExit):
+        cli_parser(["not_a_file"])
+
+    minimal_cli = cli_parser([str(test_file)])
+    assert minimal_cli.non_labelled_aa == []
+    # It seems like a space between -n and A here won't be escaped.
+    cli_labelled = cli_parser([str(test_file), "-nA,c"])
+    assert cli_labelled.non_labelled_aa == ["A", "C"]
+    cli_parser([str(test_file), "-nerror"])
+    assert "WARNING" in caplog.text
+
+
+def test_main(caplog):
+    main_cli = stfi.seq_to_first_iso.cli
+    test_file = data_dir.joinpath("sample_sequence.txt")
+    bad_file = data_dir.joinpath("sample_bad_sequence.txt")
+
+    main_cli([str(test_file), "-nA"])
+    assert "Amino acid" in caplog.text
+    assert "lines ignored" in caplog.text
+    assert Path("sample_bad_sequence.tsv").is_file()
+
+    main_cli([str(test_file), "-ooutput"])
+    assert Path("output.tsv").is_file()
+
+    with pytest.raises(SystemExit):
+        main_cli([str(bad_file)])
+    with pytest.raises(SystemExit):
+        # Error raised due to not having command line arguments.
+        main_cli([])
+
