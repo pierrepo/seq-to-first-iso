@@ -15,7 +15,11 @@ and are represented as X in formulas.
 Naming conventions for isotopes follow pyteomics's conventions.
 """
 
+__authors__ = "Lilian Yang-crosson, Pierre Poulain"
+__license__ = "BSD 3-Clause License"
 __version__ = "0.1.0"
+__maintainer__ = "Pierre Poulain"
+__email__ = "pierre.poulain@cupnet.net"
 
 from .seq_to_first_iso import (AMINO_ACIDS,
                                C12_abundance,

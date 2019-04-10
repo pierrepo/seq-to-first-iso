@@ -13,14 +13,6 @@ and are represented as X in formulas.
 Naming conventions for isotopes follow pyteomics's conventions.
 """
 
-__authors__ = "Lilian Yang-crosson"
-__copyright__ = ""
-__credits__ = [""]
-__license__ = ""
-__version__ = "0.1.0"
-__maintainer__ = ""
-__email__ = ""
-
 import argparse
 import logging
 from pathlib import Path
