@@ -66,7 +66,7 @@ The new package should be available here: https://pypi.org/project/seq-to-first-
 
 ### Add new release on GitHub
 
-On [GitHub release page](https://github.com/pierrepo/autoclasswrapper/releases) :
+On [GitHub release page](https://github.com/pierrepo/seq-to-first-iso/releases) :
 
 - Click the *Draft a release* button.
 - Select the latest version as *tag version*.
