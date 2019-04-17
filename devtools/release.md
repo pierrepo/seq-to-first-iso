@@ -31,7 +31,7 @@ $ make test-coverage
 We use the tool [bumpversion](https://github.com/peritus/bumpversion) to update and synchronize the version number
 across different files:
 ```
-$ pipenv run bumpversion --verbose --config-file devtools/bumpversion.cfg patch
+$ bumpversion --verbose --config-file devtools/bumpversion.cfg patch
 $ git push origin
 $ git push origin --tags
 ```
