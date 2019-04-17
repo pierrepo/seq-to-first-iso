@@ -5,20 +5,20 @@
           white-space: nowrap;
           position: relative;
 }
-      
+
 .custom-menu {
           display: inline-block;
           width: auto;
           vertical-align: middle;
           -webkit-font-smoothing: antialiased;
 }
- 
+
 .custom-menu-top {
           position: relative;
           padding-top: .5em;
           padding-bottom: .5em;
 }
- 
+
 
 /*
 Try to align amino acid checkboxes
