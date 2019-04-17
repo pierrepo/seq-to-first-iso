@@ -237,9 +237,10 @@ def results(thread_id):
                                error=err_msg,
                                info=info_msg)
 
-    output_name = output.stem + ".tsv"
-
-    return send_file(filename_or_fp=str(output),
+    #output_name = output.stem + ".tsv"
+    output_name = f"output_{thread_id}.tsv"
+    output.to_csv(output_name, sep="\t", index=False)
+    return send_file(filename_or_fp=output_name,
                      mimetype="text/tab-separated-values",
                      attachment_filename=output_name,
                      as_attachment=True)

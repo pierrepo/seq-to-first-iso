@@ -339,9 +339,9 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa):
     wanted_columns = ["sequence", "mass", "formula", "formula_X",
                       "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
     # Import dataframe to tsv file.
-    df_peptides[wanted_columns].to_csv(output_file, sep="\t", index=False)
+    #df_peptides[wanted_columns].to_csv(output_file, sep="\t", index=False)
 
-    return output_file
+    return df_peptides[wanted_columns]
 
 
 def cli(args=None):
