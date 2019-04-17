@@ -1,4 +1,6 @@
 **Dev**
+
+**0.2.1**
 - Format CHANGELOG
 
 **0.2.0**
