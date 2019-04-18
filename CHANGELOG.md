@@ -2,6 +2,8 @@
 
 **Dev**
 
+**0.3.0** (2019-04-18)
+
 *Changed*
 - Add support for files with annotations before the sequences
   - sequence_parser() now returns (annotations, sequences, ignored_lines)
