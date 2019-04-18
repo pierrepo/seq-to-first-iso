@@ -11,6 +11,7 @@
 # Files for packaging
 build/
 *.egg-info
+/dist/
 
 # pycache
 __pycache__/
