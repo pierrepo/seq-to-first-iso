@@ -99,25 +99,69 @@ def user_input(args):
     return options
 
 
-def sequence_parser(file):
-    """Return a tuple (sequences:list, ignored_lines:int) parsed from a file.
+def sequence_parser(file, sep="\t"):
+    """Return (annotations, sequences, ignored_lines) parsed from a file.
 
-    Take a Path() object as argument, return a list of uppercase peptides
+    Take a filename as argument.
+    The file can either just have sequences for each line or
+    can have have annotations and sequences with a separator in-between.
+
+    Return a list of annotations if any, a list of uppercase peptides
     and the number of ignored lines.
+
+    Beware: the function uses the first line to evaluate if the file has
+    annotations or not, hence a file should have a consistent format.
     """
     # Obtain a list of sequences as string if they are amino acids.
     with open(file, "r") as filin:
+        annotations = []
         sequences = []
         ignored_lines = 0
-        for sequence in filin:
-            upper_sequence = sequence.upper().strip()
-            # Character not recognized as amino acid.
-            if not (set(upper_sequence) - AMINO_ACIDS) and upper_sequence:
-                sequences.append(upper_sequence)
-            else:
-                ignored_lines += 1
+        lines = filin.readlines()
 
-    return sequences, ignored_lines
+        # Split the first line to determine if the file has annotations.
+        try:
+            has_annotations = (len(lines[0].split(sep)) > 1)
+        except IndexError:
+            log.warning("the file is empty")
+        except ValueError:
+            log.warning("separator is empty, default value '\t' used")
+            sep = "\t"
+
+        for line in lines:
+            upper_line = line.upper().strip()
+            if not has_annotations:
+                # Character not recognized as amino acid.
+                if not (set(upper_line) - AMINO_ACIDS) and upper_line:
+                    sequence = upper_line
+                    sequences.append(sequence)
+                else:
+                    ignored_lines += 1
+
+            # The file has annotations.
+            else:
+                separated_line = upper_line.split(sep)
+                # Ignore if the line is empty.
+                if not upper_line:
+                    continue
+                try:
+                    sequence = separated_line[1]
+                    annotation = separated_line[0]
+                except IndexError:
+                    # The line only has a sequence.
+                    # sequence = upper_line[0]
+                    # annotation = "no_annotation"
+                    ignored_lines += 1
+                    continue
+
+                # Verify if the sequence is valid.
+                if not set(sequence) - AMINO_ACIDS:
+                    sequences.append(sequence)
+                    annotations.append(annotation)
+                else:
+                    ignored_lines += 1
+
+    return annotations, sequences, ignored_lines
 
 
 def compute_M0(f, a):
@@ -292,14 +336,23 @@ def seq_to_midas(sequence_l, sequence_nl):
     return formula_l+formula_nl
 
 
-def seq_to_tsv(sequences, output_file, unlabelled_aa):
+def seq_to_tsv(sequences, unlabelled_aa, annotations=None):
     """Create a tsv from sequences and return its name.
 
-    Take a list of amino acid sequences, a string for the output filename
-    and a list of unlabelled amino acids.
+    Take a list of amino acid sequences, a list of unlabelled amino acids
+    and a list of annotations for the sequences.
     """
     # Dataframe of sequences.
     df_peptides = pd.DataFrame({"sequence": sequences})
+
+    if annotations:
+        # We can't associate a sequence with its annotation.
+        if len(sequences) != len(annotations):
+            log.warning("annotations and sequences have different lengths, "
+                        + "annotations will be ignored")
+            annotations = []
+        else:
+            df_peptides["annotation"] = annotations
 
     # Separate sequences.
     df_peptides["labelled"], df_peptides["unlabelled"] = zip(
@@ -338,8 +391,8 @@ def seq_to_tsv(sequences, output_file, unlabelled_aa):
 
     wanted_columns = ["sequence", "mass", "formula", "formula_X",
                       "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
-    # Import dataframe to tsv file.
-    #df_peptides[wanted_columns].to_csv(output_file, sep="\t", index=False)
+    if annotations:
+        wanted_columns.insert(0, "annotation")
 
     return df_peptides[wanted_columns]
 
@@ -357,7 +410,7 @@ def cli(args=None):
         log.info(f"Amino acid with default abundance: {unlabelled_aa}")
 
     log.info("Parsing file")
-    sequences, ignored_lines = sequence_parser(input_file)
+    annotations, sequences, ignored_lines = sequence_parser(input_file)
 
     if not sequences:
         log.error(f"incorrect format, make sure that lines "
@@ -369,11 +422,12 @@ def cli(args=None):
 
     # Choose output filename.
     if not options.output:
-        output_file = input_file.stem + ".tsv"
+        output_file = input_file.stem + "_stfi.tsv"
     else:
-        output_file = options.output + ".tsv"
+        output_file = options.output + "_stfi.tsv"
 
-    seq_to_tsv(sequences, output_file, unlabelled_aa)
+    df = seq_to_tsv(sequences, unlabelled_aa, annotations)
+    df.to_csv(output_file, sep="\t", index=False)
 
 
 if __name__ == "__main__":

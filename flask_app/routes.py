@@ -146,7 +146,7 @@ def wtfupload():
 
         # Verification of file format.
         try:
-            sequences, ignored_lines = sequence_parser(filepath)
+            annotations, sequences, ignored_lines = sequence_parser(filepath)
         except UnicodeDecodeError as ude:
             return render_template("error.html",
                                    error=f"{ude}<br>"
@@ -174,17 +174,17 @@ def wtfupload():
         thread_id = random.randint(0, 10000)
 
         # Absolute path to the file (minus the .tsv).
-        output_file = filepath.parent.joinpath(f"{filepath.stem}"
-                                               + f"_{thread_id}")
+        # output_file = filepath.parent.joinpath(f"{filepath.stem}"
+        #                                       + f"_{thread_id}")
 
         # Create a thread for seq_to_tsv and start it.
         threads[thread_id] = ThreadWithReturnValue(target=seq_to_tsv,
                                                    kwargs={"sequences":
                                                            sequences,
-                                                           "output_file":
-                                                           output_file,
                                                            "unlabelled_aa":
-                                                           checked
+                                                           checked,
+                                                           "annotations":
+                                                           annotations,
                                                            })
         threads[thread_id].start()
 
