@@ -119,14 +119,15 @@ def sequence_parser(file, sep="\t"):
         ignored_lines = 0
         lines = filin.readlines()
 
+        if not sep:
+            log.warning("separator is empty, default value '\t' used")
+            sep = "\t"
+
         # Split the first line to determine if the file has annotations.
         try:
             has_annotations = (len(lines[0].split(sep)) > 1)
         except IndexError:
             log.warning("the file is empty")
-        except ValueError:
-            log.warning("separator is empty, default value '\t' used")
-            sep = "\t"
 
         for line in lines:
             upper_line = line.upper().strip()
