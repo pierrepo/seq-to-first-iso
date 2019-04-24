@@ -1,6 +1,6 @@
-pandas
-pyteomics
-seq-to-first-iso
-flask
-flask-wtf
-gunicorn
+pandas==0.24.2
+pyteomics==4.1
+seq-to-first-iso==0.3.0
+flask==1.0.2
+flask-wtf==0.14.2
+gunicorn==19.9.0
