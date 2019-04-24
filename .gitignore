@@ -2,6 +2,7 @@
 # input files
 *.txt
 !LICENSE.txt
+!requirements.txt
 !sample*
 
 # output files

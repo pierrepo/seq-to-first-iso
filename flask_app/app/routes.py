@@ -21,7 +21,7 @@ from wtforms import SelectMultipleField, SubmitField
 from wtforms.widgets import CheckboxInput, ListWidget
 from werkzeug.utils import secure_filename
 
-from flask_app import app
+from app import app
 from seq_to_first_iso import sequence_parser, seq_to_tsv
 
 
@@ -239,8 +239,10 @@ def results(thread_id):
 
     #output_name = output.stem + ".tsv"
     output_name = f"output_{thread_id}.tsv"
-    output.to_csv(output_name, sep="\t", index=False)
-    return send_file(filename_or_fp=output_name,
+    output_file = str(Path(app.config["UPLOAD_FOLDER"]).joinpath(output_name))
+    output.to_csv(output_file, sep="\t", index=False)
+
+    return send_file(filename_or_fp=output_file,
                      mimetype="text/tab-separated-values",
                      attachment_filename=output_name,
                      as_attachment=True)
@@ -248,3 +250,4 @@ def results(thread_id):
 
 if __name__ == '__main__':
     print("routes opened")
+    app.run()

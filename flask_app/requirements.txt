@@ -1,0 +1,6 @@
+pandas
+pyteomics
+seq-to-first-iso
+flask
+flask-wtf
+gunicorn
