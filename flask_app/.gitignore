@@ -1,0 +1,7 @@
+# Heroku gitignore
+
+# web app
+uploads/
+
+# cache
+__pycache__/

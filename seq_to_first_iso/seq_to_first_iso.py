@@ -146,17 +146,15 @@ def sequence_parser(file, sep="\t"):
                 if not upper_line:
                     continue
                 try:
-                    sequence = separated_line[1]
-                    annotation = separated_line[0]
+                    sequence = separated_line[1].strip()
+                    annotation = separated_line[0].strip()
                 except IndexError:
                     # The line only has a sequence.
-                    # sequence = upper_line[0]
-                    # annotation = "no_annotation"
                     ignored_lines += 1
                     continue
 
                 # Verify if the sequence is valid.
-                if not set(sequence) - AMINO_ACIDS:
+                if not (set(sequence) - AMINO_ACIDS) and sequence:
                     sequences.append(sequence)
                     annotations.append(annotation)
                 else:
