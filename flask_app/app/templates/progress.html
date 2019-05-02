@@ -39,8 +39,8 @@
 
       {# Stops the reloading and everything after #}
       <script>
-        sessionStorage.clear()
-        window.stop()
+        sessionStorage.clear();
+        window.stop();
       </script>
     {% endif %}
 
@@ -51,7 +51,7 @@
     function myTimer() {
       document.getElementById("counter").innerHTML = count;
       count ++;
-      sessionStorage.setItem("count", count)
+      sessionStorage.setItem("count", count);
     }
     </script>
 </div>

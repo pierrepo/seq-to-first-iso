@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1 class="title">Seq to first iso: compute intensities
+<h1 class="title">Compute intensities
     of the two first isotopologues from sequences</h1>
 
 <form method=post enctype=multipart/form-data action="{{ url_for("wtfupload") }}">
@@ -48,7 +48,7 @@
         <select id="unlabelled" onchange="getDropdown()">
           <option value="none">None</option>
           <option value="all">All</option>
-          <option value="homoSapiens">Homo sapiens</option>
+          <option value="homoSapiens"><i>Homo sapiens</i></option>
         </select>
       </div>
     </span>
@@ -89,12 +89,12 @@
     var unlabelled = dropdown.options[dropdown.selectedIndex].value;
 
     if (essentialAA[unlabelled]){
-      toggle(document.getElementsByName("amino_acids"), unlabelled)
+      toggle(document.getElementsByName("amino_acids"), unlabelled);
     }
   }
 
   function toggle(source, unlabelled){
-    checkboxes = document.getElementsByName("amino_acids")
+    checkboxes = document.getElementsByName("amino_acids");
     for(var i=0, n=checkboxes.length;i<n;i++) {
       {# checkboxes[i].value in essentialAA[unlabelled] does not work #}
       if (essentialAA[unlabelled].includes(checkboxes[i].value)){
