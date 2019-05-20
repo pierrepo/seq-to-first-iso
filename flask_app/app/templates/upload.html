@@ -49,6 +49,7 @@
           <option value="none">None</option>
           <option value="all">All</option>
           <option value="homoSapiens"><i>Homo sapiens</i></option>
+          <option value="BY4741">BY4741<i>(S. cerevisiae)</i></option>
         </select>
       </div>
     </span>
@@ -83,6 +84,7 @@
   essentialAA["all"] = ["A", "C", "D", "E", "F", "G", "H", "I", "K", "L",
                         "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y"];
   essentialAA["homoSapiens"] = ["F", "H", "I", "K", "L", "M", "T", "V", "W"];
+  essentialAA["BY4741"] = ["H", "L", "M"]
 
   function getDropdown(){
     var dropdown = document.getElementById("unlabelled");
