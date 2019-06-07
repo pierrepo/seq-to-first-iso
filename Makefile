@@ -10,7 +10,7 @@ test: ## Run tests
 .PHONY: test
 
 test-coverage: ## Run tests with coverage
-	py.test --cov-config .coveragerc --cov=seq_to_first_iso --cov-report term-missing
+	py.test --cov --cov-config .coveragerc
 .PHONY: test-coverage
 
 lint: ## Lint code
