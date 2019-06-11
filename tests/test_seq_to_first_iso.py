@@ -12,6 +12,7 @@ import seq_to_first_iso as stfi
 data_dir = Path(__file__).parent.resolve().joinpath("test_data")
 REL = 1e-6
 
+
 # Tests for pyteomics.
 @pytest.fixture(scope="session")
 def get_composition():
@@ -133,7 +134,26 @@ def test_parser():
     assert type(parser_output[2]) is int
     assert parser_output[1] == expected_sequences
     assert parser_output[2] == 4
-    # TODO: add tests with annotations.
+
+
+def test_parser_annotation(caplog):
+    empty_file = data_dir.joinpath("sample_empty_file.tsv")
+    test_file = data_dir.joinpath("sample_sequence.tsv")
+    expected_sequences = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
+
+    empty_output = stfi.sequence_parser(empty_file, sep="")
+    assert "file is empty" in caplog.text
+    assert "separator is empty" in caplog.text
+    # No annotations or sequences were taken.
+    assert empty_output[0] == empty_output[1] == []
+
+    parser_output = stfi.sequence_parser(test_file)
+    assert type(parser_output) is tuple
+    assert type(parser_output[0]) is list
+    assert type(parser_output[1]) is list
+    assert type(parser_output[2]) is int
+    assert parser_output[1] == expected_sequences
+    assert parser_output[2] == 2
 
 
 def test_deprecated_computation_isotopologue():

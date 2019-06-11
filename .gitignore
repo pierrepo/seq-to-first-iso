@@ -7,6 +7,7 @@
 # output files
 *.tsv
 !reference*
+!tests/test_data/sample*
 
 # Files for packaging
 build/
