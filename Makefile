@@ -6,11 +6,11 @@ env: ## Create conda env
 .PHONY: env
 
 test: ## Run tests
-	py.test tests
+	pytest tests
 .PHONY: test
 
 test-coverage: ## Run tests with coverage
-	py.test --cov --cov-config .coveragerc
+	pytest --cov --cov-config .coveragerc
 .PHONY: test-coverage
 
 lint: ## Lint code

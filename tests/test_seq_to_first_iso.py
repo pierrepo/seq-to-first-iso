@@ -94,6 +94,26 @@ def test_constants():
                                                 "S[32]": 0.9493, "S[33]": 0.0076, "S[34]": 0.0429}
 
 
+@pytest.fixture(scope="session")
+def get_separated_sequence():
+    """For C,D and W unlabelled."""
+    return [("ABCDEFG", ("ABEFG", "CD")),
+            ("ABCDEFGCDCDDC", ("ABEFG", "CDCDCDDC")),
+            ("", ("", "")),
+            ]
+
+
+def test_separation(get_separated_sequence):
+    test_unlabelled = "CDW"
+    for data in get_separated_sequence:
+        sequence = data[0]
+        expected = data[1]
+        assert stfi.separate_labelled(sequence, test_unlabelled)
+        result = stfi.separate_labelled(sequence, test_unlabelled)
+        assert type(result) is tuple
+        assert result == expected
+
+
 def test_parser():
     test_file = data_dir.joinpath("sample_sequence.txt")
     bad_file = data_dir.joinpath("bad_sample_sequence.zip")
@@ -115,26 +135,6 @@ def test_parser():
     assert parser_output[2] == 4
     # TODO: add tests with annotations.
 
-
-def test_separation():
-    test_sequence = "ABCDEFG"
-    test_sequence_long = "ABCDEFGCDCDDC"
-    test_unlabelled = "CDW"
-
-    assert stfi.separate_labelled(test_sequence, test_unlabelled)
-    assert stfi.separate_labelled(test_sequence_long, test_unlabelled)
-    assert stfi.separate_labelled("", "")
-    test_small = stfi.separate_labelled(test_sequence, test_unlabelled)
-    test_long = stfi.separate_labelled(test_sequence_long, test_unlabelled)
-    test_empty = stfi.separate_labelled("", "")
-
-    assert type(test_small) is tuple
-    assert type(test_long) is tuple
-    assert type(test_empty) is tuple
-
-    assert test_small == ("ABEFG", "CD")
-    assert test_long == ("ABEFG", "CDCDCDDC")
-    assert test_empty == ("", "")
 
 def test_deprecated_computation_isotopologue():
     test_composition = mass.Composition("ACDE")
