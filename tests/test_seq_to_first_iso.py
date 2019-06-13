@@ -4,7 +4,9 @@
 import filecmp
 from pathlib import Path
 
+import pandas as pd
 from pyteomics import mass
+from pyteomics.auxiliary.structures import PyteomicsError
 import pytest
 
 import seq_to_first_iso as stfi
@@ -196,10 +198,10 @@ def test_string_casting():
     assert stfi.formula_to_str(test_formula_X) == "C15H43O12N9S1X17"
 
 
-def test_seq_to_tsv():
+def test_seq_to_tsv(caplog):
     sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
-    output_file = data_dir.joinpath("output.tsv")
-    unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
+#    output_file = data_dir.joinpath("output.tsv")
+#    unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
     # TODO: add dataframe comparison.
 #    assert stfi.seq_to_tsv(sequences_given, unlabelled_aa=[])
 #    assert output_file.is_file()
@@ -210,6 +212,16 @@ def test_seq_to_tsv():
 #    assert filecmp.cmp(output_file, data_dir.joinpath("reference_sequence.tsv"), shallow=False)
 #    assert data_dir.joinpath("reference_sequence_AT.tsv")
 #    assert filecmp.cmp(unlabelled_output_file, data_dir.joinpath("reference_sequence_AT.tsv"), shallow=False)
+    # Parse non valid sequence.
+    with pytest.raises(PyteomicsError):
+        stfi.seq_to_tsv(["b"], [])
+    # Testing  annotations and sequences with different lengths.
+    df = stfi.seq_to_tsv(["AC"], [], annotations=["id1", "id2"])
+    assert "different lengths" in caplog.text
+    assert type(df) is pd.DataFrame
+    # Annotations and sequences with same length.
+    df = stfi.seq_to_tsv(["AC"], [], annotations=["id1"])
+    assert type(df) is pd.DataFrame
 
 
 def test_cli_parser(caplog):
