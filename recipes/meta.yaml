@@ -1,0 +1,45 @@
+{% set version = "0.3.0" %}
+
+package:
+  name: seq-to-first-iso
+  version: {{ version }}
+
+source:
+  url: https://github.com/pierrepo/seq-to-first-iso/archive/v{{ version }}.tar.gz
+  sha256: 538d19cbcc323a850a035c1f76a7e3ee07f01dac49c95f4a86e1448697d218b6
+
+build:
+  noarch: python
+  number: 0
+  entry_points:
+    - seq-to-first-iso = seq_to_first_iso.seq_to_first_iso:cli
+  script: "python setup.py install --single-version-externally-managed --record=record.txt"
+
+requirements:
+  host:
+    - python >=3.6
+    - setuptools
+    - pandas
+    - pyteomics
+
+  run:
+    - python >=3.6
+    - pandas
+    - pyteomics
+
+
+test:
+  imports:
+    - seq_to_first_iso
+    
+  commands:
+    - seq-to-first-iso -h
+
+about:
+  home: https://github.com/pierrepo/seq-to-first-iso
+  license: BSD 3-Clause License
+  license_family: BSD
+  license_file: LICENSE.txt
+  summary: 'Compute first two isotopologues intensity from peptide sequence'
+
+
