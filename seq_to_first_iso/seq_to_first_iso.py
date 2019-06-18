@@ -16,6 +16,7 @@ Naming conventions for isotopes follow pyteomics's conventions.
 import argparse
 import logging
 from pathlib import Path
+import re
 import sys
 
 import pandas as pd
@@ -27,6 +28,8 @@ USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
 # Note: pyteomics also have U, O, H- and -OH that can be used for sequences
 # which are not supported in this version.
 AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
+XTANDEM_MOD_PATTERN = re.compile(r"\.?\(([^\)]*)\)")
+UNIMOD_MODS = mass.Unimod()
 
 # Set custom logger.
 log = logging.getLogger(__name__)
@@ -105,9 +108,14 @@ def sequence_parser(file, sep="\t"):
     Take a filename as argument.
     The file can either just have sequences for each line or
     can have have annotations and sequences with a separator in-between.
+    Supports Xtandem's Post-Translational Modification notation.
 
-    Return a list of annotations if any, a list of uppercase peptides
-    and the number of ignored lines.
+    Return a dict with:
+        - "annotations": a list of annotations if any.
+        - "raw_sequences": a list of unmodified peptide sequences.
+        - "sequences": a list of uppercase peptide sequences.
+        - "modifications": a list of lists of PTMs.
+        - "ignored_lines": and the number of ignored lines.
 
     Beware: the function uses the first line to evaluate if the file has
     annotations or not, hence a file should have a consistent format.
@@ -115,7 +123,9 @@ def sequence_parser(file, sep="\t"):
     # Obtain a list of sequences as string if they are amino acids.
     with open(file, "r") as filin:
         annotations = []
+        raw_sequences = []
         sequences = []
+        modifications = []
         ignored_lines = 0
         lines = filin.readlines()
 
@@ -130,37 +140,46 @@ def sequence_parser(file, sep="\t"):
             log.warning("the file is empty")
 
         for line in lines:
-            upper_line = line.upper().strip()
-            if not has_annotations:
-                # Character not recognized as amino acid.
-                if not (set(upper_line) - AMINO_ACIDS) and upper_line:
-                    sequence = upper_line
-                    sequences.append(sequence)
-                else:
-                    ignored_lines += 1
+            split_line = line.split(sep)
 
-            # The file has annotations.
-            else:
-                separated_line = upper_line.split(sep)
-                # Ignore if the line is empty.
-                if not upper_line:
-                    continue
+            # Empty line.
+            if not len(split_line):
+                ignored_lines += 1
+                continue
+
+            if has_annotations:
                 try:
-                    sequence = separated_line[1].strip()
-                    annotation = separated_line[0].strip()
+                    raw_sequence = split_line[1].strip()
+                    annotation = split_line[0].strip()
                 except IndexError:
-                    # The line only has a sequence.
+                    # The line only has one column.
                     ignored_lines += 1
                     continue
+            else:
+                raw_sequence = split_line[0].strip()
 
-                # Verify if the sequence is valid.
-                if not (set(sequence) - AMINO_ACIDS) and sequence:
-                    sequences.append(sequence)
+            # No parsing is done on modifications.
+            modification = re.findall(XTANDEM_MOD_PATTERN, raw_sequence)
+            # Capitalize the sequence.
+            sequence = re.sub(XTANDEM_MOD_PATTERN, "", raw_sequence).upper()
+
+            if not(set(sequence) - AMINO_ACIDS) and sequence:
+                # Everything should be clear.
+                raw_sequences.append(raw_sequence)
+                sequences.append(sequence)
+                modifications.append(modification)
+                if has_annotations:
                     annotations.append(annotation)
-                else:
-                    ignored_lines += 1
+            else:
+                ignored_lines += 1
 
-    return annotations, sequences, ignored_lines
+    parsed_output = {"annotations": annotations,
+                     "raw_sequences": raw_sequences,
+                     "sequences": sequences,
+                     "modifications": modifications,
+                     "ignored_lines": ignored_lines}
+
+    return parsed_output
 
 
 def compute_M0(f, a):
@@ -335,14 +354,67 @@ def seq_to_midas(sequence_l, sequence_nl):
     return formula_l+formula_nl
 
 
-def seq_to_tsv(sequences, unlabelled_aa, annotations=None):
-    """Create a tsv from sequences and return its name.
+def get_mods_composition(modifications):
+    """Return the composition of a list of modifications.
 
-    Take a list of amino acid sequences, a list of unlabelled amino acids
-    and a list of annotations for the sequences.
+    Takes a list of modifications (Corresponding to Unimod titles)
+    Returns the total pyteomics.mass.Composition()
+
+    Have the mass.Unimod() dict as parameter ?
     """
+    mod_composition = mass.Composition()
+    for mod in modifications:
+        try:
+            mod_composition += UNIMOD_MODS.by_title(mod)["composition"]
+        except (KeyError, AttributeError):
+            log.warning(f"Unimod entry not found for : {mod}")
+        except:
+            log.error(f"unknown error for {mod}")
+    return mod_composition
+
+
+def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
+    """Create a dataframe from sequences and return its name.
+
+    Input:
+        - sequences : a list of pure peptide sequences.
+        - unlabelled_aa: a container of unlabelled amino acids.
+        - (optional) annotations : a list of IDs for the sequences
+        - (optional) raw_sequences : a list of sequences with Xtandem PTMs.
+        - (optional) modifications : a list of modifications for raw_sequences.
+
+    If raw_sequence is provided, modifications must also be provided.
+
+    TODO: change name with version change.
+    """
+    accepted_input = ["sequences", "unlabelled_aa", "annotations",
+                      "raw_sequences", "modifications"]
+    for key in kwargs:
+        if key not in accepted_input:
+            log.warning(f"argument {key} not recognized")
+
+    annotations = kwargs.get("annotations")
+    raw_sequences = kwargs.get("raw_sequences")
+    modifications = kwargs.get("modifications")
+
     # Dataframe of sequences.
-    df_peptides = pd.DataFrame({"sequence": sequences})
+    df_peptides = pd.DataFrame({"sequence": sequences})  #TO CHANGE
+
+    if raw_sequences or modifications:
+        # Testing if they have the same length as sequences.
+        if len(raw_sequences) != len(sequences):
+            log.warning("raw_sequences and sequences have different "
+                        + "lengths, raw_sequences will be ignored")
+            raw_sequences = []
+            modifications = []
+        elif len(raw_sequences) != len(modifications):
+            log.warning("raw_sequences and modifications have different "
+                        + "lengths, they will be ignored")
+            raw_sequences = []
+            modifications = []
+        else:
+            df_peptides["raw_sequence"] = raw_sequences
+            df_peptides["mods"] = modifications
 
     if annotations:
         # We can't associate a sequence with its annotation.
@@ -358,19 +430,27 @@ def seq_to_tsv(sequences, unlabelled_aa, annotations=None):
             *df_peptides["sequence"].apply(separate_labelled,
                                            unlabelled_aa=unlabelled_aa))
 
-    # Add mass and formulas of sequences
-    log.info("Computing mass")
-    df_peptides["mass"] = df_peptides["sequence"].map(mass.calculate_mass)
-
+    # Add formulas and mass  of sequences.
     log.info("Computing formula")
-    # Formula as a string (instead of mass.Composition).
     df_peptides["f"] = df_peptides["sequence"].apply(mass.Composition)
-    df_peptides["formula"] = df_peptides["f"].apply(formula_to_str)
     # Composition, with unlabelled C as element X.
     df_peptides["f_X"] = df_peptides.apply(lambda x:
                                            seq_to_midas(x["labelled"],
                                                         x["unlabelled"]),
                                            axis=1)
+
+    # Get the composition of the modifications.
+    if modifications:
+        log.info("Computing composition of modifications")
+        df_peptides["m_comp"] = df_peptides["mods"].apply(get_mods_composition)
+        df_peptides["f"] = df_peptides["f"] + df_peptides["m_comp"]
+        df_peptides["f_X"] = df_peptides["f_X"] + df_peptides["m_comp"]
+
+    # Formula as a string (instead of mass.Composition).
+    df_peptides["formula"] = df_peptides["f"].apply(formula_to_str)
+
+    log.info("Computing mass")
+    df_peptides["mass"] = df_peptides["f"].map(mass.calculate_mass)
 
     # Add M0 and M1 in normal conditions.
     log.info("Computing M0 and M1")
@@ -390,6 +470,11 @@ def seq_to_tsv(sequences, unlabelled_aa, annotations=None):
 
     wanted_columns = ["sequence", "mass", "formula", "formula_X",
                       "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
+    # Take raw sequence if available.
+    if raw_sequences:
+        df_peptides.rename(index=str, columns={"sequence": "pure_seq",
+                                               "raw_sequence": "sequence"})
+
     if annotations:
         wanted_columns.insert(0, "annotation")
 
@@ -409,7 +494,10 @@ def cli(args=None):
         log.info(f"Amino acid with default abundance: {unlabelled_aa}")
 
     log.info("Parsing file")
-    annotations, sequences, ignored_lines = sequence_parser(input_file)
+    parsed_output = sequence_parser(input_file)
+    sequences = parsed_output["sequences"]
+    # Remove from parsed_output dict.
+    ignored_lines = parsed_output.pop("ignored_lines")
 
     if not sequences:
         log.error(f"incorrect format, make sure that lines "
@@ -423,9 +511,9 @@ def cli(args=None):
     if not options.output:
         output_file = input_file.stem + "_stfi.tsv"
     else:
-        output_file = options.output + "_stfi.tsv"
+        output_file = options.output + ".tsv"
 
-    df = seq_to_tsv(sequences, unlabelled_aa, annotations)
+    df = seq_to_tsv(unlabelled_aa=unlabelled_aa, **parsed_output)
     df.to_csv(output_file, sep="\t", index=False)
 
 
