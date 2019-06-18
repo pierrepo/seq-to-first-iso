@@ -130,12 +130,18 @@ def test_parser():
     assert stfi.sequence_parser(test_file)
 
     parser_output = stfi.sequence_parser(test_file)
-    assert type(parser_output) is tuple
-    assert type(parser_output[0]) is list
-    assert type(parser_output[1]) is list
-    assert type(parser_output[2]) is int
-    assert parser_output[1] == expected_sequences
-    assert parser_output[2] == 4
+#    assert type(parser_output) is tuple
+#    assert type(parser_output[0]) is list
+#    assert type(parser_output[1]) is list
+#    assert type(parser_output[2]) is int
+#    assert parser_output[1] == expected_sequences
+#    assert parser_output[2] == 4
+    assert type(parser_output) is dict
+    assert type(parser_output.get("annotations")) is list
+    assert type(parser_output.get("sequences")) is list
+    assert type(parser_output.get("ignored_lines")) is int
+    assert parser_output.get("sequences") == expected_sequences
+    assert parser_output.get("ignored_lines") == 4
 
 
 def test_parser_annotation(caplog):
@@ -147,15 +153,15 @@ def test_parser_annotation(caplog):
     assert "file is empty" in caplog.text
     assert "separator is empty" in caplog.text
     # No annotations or sequences were taken.
-    assert empty_output[0] == empty_output[1] == []
+    assert empty_output.get("annotations") == empty_output.get("sequences") == []
 
     parser_output = stfi.sequence_parser(test_file)
-    assert type(parser_output) is tuple
-    assert type(parser_output[0]) is list
-    assert type(parser_output[1]) is list
-    assert type(parser_output[2]) is int
-    assert parser_output[1] == expected_sequences
-    assert parser_output[2] == 2
+    assert type(parser_output) is dict
+    assert type(parser_output.get("annotations")) is list
+    assert type(parser_output.get("sequences")) is list
+    assert type(parser_output.get("ignored_lines")) is int
+    assert parser_output.get("sequences") == expected_sequences
+    assert parser_output.get("ignored_lines") == 3
 
 
 def test_deprecated_computation_isotopologue():
@@ -252,7 +258,7 @@ def test_main(caplog):
     assert Path("sample_sequence_stfi.tsv").is_file()
 
     main_cli([str(test_file), "-ooutput"])
-    assert Path("output_stfi.tsv").is_file()
+    assert Path("output.tsv").is_file()
 
     with pytest.raises(SystemExit):
         main_cli([str(bad_file)])

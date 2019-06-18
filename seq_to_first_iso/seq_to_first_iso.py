@@ -368,7 +368,7 @@ def get_mods_composition(modifications):
             mod_composition += UNIMOD_MODS.by_title(mod)["composition"]
         except (KeyError, AttributeError):
             log.warning(f"Unimod entry not found for : {mod}")
-        except:
+        except Exception:
             log.error(f"unknown error for {mod}")
     return mod_composition
 
@@ -398,7 +398,7 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     modifications = kwargs.get("modifications")
 
     # Dataframe of sequences.
-    df_peptides = pd.DataFrame({"sequence": sequences})  #TO CHANGE
+    df_peptides = pd.DataFrame({"sequence": sequences})
 
     if raw_sequences or modifications:
         # Testing if they have the same length as sequences.
