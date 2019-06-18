@@ -28,10 +28,19 @@ USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
 # Note: pyteomics also have U, O, H- and -OH that can be used for sequences
 # which are not supported in this version.
 AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
-#XTANDEM_MOD_PATTERN = re.compile(r"\.?\(([^\)]*)\)")
-XTANDEM_MOD_PATTERN = re.compile(r".?\(([^\(\d\)]*?)\)")
-# Modification with parenthesis inside.
-XTANDEM_MOD_PATTERN_P = re.compile(r".?\((.*?\(-?\d+\))\)")
+
+XTANDEM_MOD_PATTERN = re.compile(r"""
+                                 \.?       # 0 or 1 dot
+                                 \(        # Opening parenthesis
+                                   (       # Begin capture
+                                    (?:         # Not capture the following 
+                                      [^\(\)] | # Either not parentheses or
+                                      \(-?\d+\) # parentheses containing an int
+                                    )+          # multiple times
+                                   )       # End capture
+                                 \)        # Closing parenthesis
+                                 """, re.VERBOSE)
+
 UNIMOD_MODS = mass.Unimod()
 
 # Set custom logger.
@@ -165,12 +174,8 @@ def sequence_parser(file, sep="\t"):
             raw_sequence = re.sub("&gt;",">", raw_sequence)
             # No parsing is done on modifications.
             modification = re.findall(XTANDEM_MOD_PATTERN, raw_sequence)
-
-            # Remove PTMs without parenthesis, then add remaining PTMs.
-            sequence_pre = re.sub(XTANDEM_MOD_PATTERN, "", raw_sequence)
-            modification += re.findall(XTANDEM_MOD_PATTERN_P, sequence_pre)
-            # Capitalize the sequence.
-            sequence = re.sub(XTANDEM_MOD_PATTERN_P, "", sequence_pre).upper()
+            # Remove PTMs and capitalize the sequence.
+            sequence = re.sub(XTANDEM_MOD_PATTERN, "", raw_sequence).upper()
 
             if not(set(sequence) - AMINO_ACIDS) and sequence:
                 # Everything should be clear.
