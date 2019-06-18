@@ -29,9 +29,9 @@ USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
 # which are not supported in this version.
 AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
 #XTANDEM_MOD_PATTERN = re.compile(r"\.?\(([^\)]*)\)")
-XTANDEM_MOD_PATTERN = re.compile(r".?\(([^\((?!\d+)\)]*?)\)")
+XTANDEM_MOD_PATTERN = re.compile(r".?\(([^\(\d\)]*?)\)")
 # Modification with parenthesis inside.
-XTANDEM_MOD_PATTERN_P = re.compile(r"\((.*?\(-?\d+\))\)")
+XTANDEM_MOD_PATTERN_P = re.compile(r".?\((.*?\(-?\d+\))\)")
 UNIMOD_MODS = mass.Unimod()
 
 # Set custom logger.
