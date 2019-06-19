@@ -224,7 +224,7 @@ def test_get_mods_composition(get_mods, caplog):
 
 
 def test_seq_to_tsv(caplog):
-    sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
+#    sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
 #    output_file = data_dir.joinpath("output.tsv")
 #    unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
     # TODO: add dataframe comparison.
@@ -247,6 +247,17 @@ def test_seq_to_tsv(caplog):
     # Annotations and sequences with same length.
     df = stfi.seq_to_tsv(["AC"], [], annotations=["id1"])
     assert type(df) is pd.DataFrame
+
+    # Test verification with modifications
+    no_mod_input = {"sequences": ["A"], "unlabelled_aa":[],
+                    "raw_sequences":["A"], "not_modifications":[]}
+    no_rseq_input = {"sequences": ["A"], "unlabelled_aa":[],
+                     "modifications":["Oxidation"]}
+    stfi.seq_to_tsv(**no_mod_input)
+    assert "not_modifications not recognized" in caplog.text
+    assert "raw_sequences and modifications have different" in caplog.text
+    stfi.seq_to_tsv(**no_rseq_input)
+    assert "raw_sequences and sequences have different" in caplog.text
 
 
 def test_cli_parser(caplog):

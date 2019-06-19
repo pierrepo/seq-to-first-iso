@@ -401,9 +401,9 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
         if key not in accepted_input:
             log.warning(f"argument {key} not recognized")
 
-    annotations = kwargs.get("annotations")
-    raw_sequences = kwargs.get("raw_sequences")
-    modifications = kwargs.get("modifications")
+    annotations = kwargs.get("annotations", [])
+    raw_sequences = kwargs.get("raw_sequences", [])
+    modifications = kwargs.get("modifications", [])
 
     # Dataframe of sequences.
     df_peptides = pd.DataFrame({"sequence": sequences})
