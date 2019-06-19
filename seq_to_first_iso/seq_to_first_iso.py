@@ -33,10 +33,10 @@ XTANDEM_MOD_PATTERN = re.compile(r"""
                                  \.?       # 0 or 1 dot
                                  \(        # Opening parenthesis
                                    (       # Begin capture
-                                    (?:         # Not capture the following 
-                                      [^\(\)] | # Either not parentheses or
-                                      \(-?\d+\) # parentheses containing an int
-                                    )+          # multiple times
+                                    (?:        # Not capture the following
+                                     [^\(\)] | # Either not parentheses or
+                                     \(-?\d+\) # parentheses containing an int
+                                    )+         # multiple times
                                    )       # End capture
                                  \)        # Closing parenthesis
                                  """, re.VERBOSE)
@@ -171,7 +171,7 @@ def sequence_parser(file, sep="\t"):
                 raw_sequence = split_line[0].strip()
 
             # Convert potential HTML residues.
-            raw_sequence = re.sub("&gt;",">", raw_sequence)
+            raw_sequence = re.sub("&gt;", ">", raw_sequence)
             # No parsing is done on modifications.
             modification = re.findall(XTANDEM_MOD_PATTERN, raw_sequence)
             # Remove PTMs and capitalize the sequence.
@@ -382,8 +382,6 @@ def get_mods_composition(modifications):
             mod_composition += UNIMOD_MODS.by_title(mod)["composition"]
         except (KeyError, AttributeError, TypeError):
             log.warning(f"Unimod entry not found for : {mod}")
-        except Exception as exce:
-            log.error(f"Unhandled error for modification '{mod}':\n{exce}")
     return mod_composition
 
 

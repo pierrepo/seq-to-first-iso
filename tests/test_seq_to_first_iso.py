@@ -204,6 +204,25 @@ def test_string_casting():
     assert stfi.formula_to_str(test_formula_X) == "C15H43O12N9S1X17"
 
 
+@pytest.fixture(scope="session")
+def get_mods():
+    return [(["Oxidation"], mass.Composition({"O":1})),
+            (["Acetyl", "Phospho"], mass.Composition({'H':3, 'C':2, 'O':4, "P":1})),
+            (["Acetyl", "Phospho", "not_mod"], mass.Composition({'H':3, 'C':2, 'O':4, "P":1})),
+            ([], mass.Composition()),
+            ]
+
+
+def test_get_mods_composition(get_mods, caplog):
+    get_mods_composition = stfi.seq_to_first_iso.get_mods_composition
+    get_mods_composition(["not_mod"])
+    assert "entry not found" in caplog.text
+    for data in get_mods:
+        modifications = data[0]
+        expected = data[1]
+        assert get_mods_composition(modifications) == expected
+
+
 def test_seq_to_tsv(caplog):
     sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
 #    output_file = data_dir.joinpath("output.tsv")
