@@ -154,11 +154,6 @@ def sequence_parser(file, sep="\t"):
         for line in lines:
             split_line = line.split(sep)
 
-            # Empty line.
-            if not split_line:
-                ignored_lines += 1
-                continue
-
             if has_annotations:
                 try:
                     raw_sequence = split_line[1].strip()
@@ -172,11 +167,12 @@ def sequence_parser(file, sep="\t"):
 
             # Convert potential HTML residues.
             raw_sequence = re.sub("&gt;", ">", raw_sequence)
-            # No parsing is done on modifications.
+            # No verification is done on modifications here.
             modification = re.findall(XTANDEM_MOD_PATTERN, raw_sequence)
             # Remove PTMs and capitalize the sequence.
             sequence = re.sub(XTANDEM_MOD_PATTERN, "", raw_sequence).upper()
 
+            # Verify if sequence is valid and not empty.
             if not(set(sequence) - AMINO_ACIDS) and sequence:
                 # Everything should be clear.
                 raw_sequences.append(raw_sequence)
