@@ -42,6 +42,8 @@ XTANDEM_MOD_PATTERN = re.compile(r"""
                                  """, re.VERBOSE)
 
 UNIMOD_MODS = mass.Unimod()
+# This variable is obsoleted if an natural element shall be named X.
+USED_ELEMS = "CHONPSX"
 
 # Set custom logger.
 log = logging.getLogger(__name__)
@@ -344,7 +346,7 @@ def compute_M1_nl(f, a):
 def formula_to_str(composition):
     """Return formula from Composition as a string."""
     formula_str = ""
-    for element in "CHONSX":
+    for element in USED_ELEMS:
         if element in composition:
             formula_str += f"{element}{composition[element]}"
     return formula_str
@@ -372,13 +374,20 @@ def get_mods_composition(modifications):
 
     Have the mass.Unimod() dict as parameter ?
     """
-    mod_composition = mass.Composition()
+    total_mod_composition = mass.Composition()
     for mod in modifications:
         try:
-            mod_composition += UNIMOD_MODS.by_title(mod)["composition"]
+            mod_composition = UNIMOD_MODS.by_title(mod)["composition"]
+            total_mod_composition += mod_composition
+            # Using set comparison here won't work with elements as isotopes.
+            for elem in mod_composition:
+                if not elem in USED_ELEMS:
+                    log.warning(f"{elem} is not supported in the computation"
+                                "of M0 and M1")
+
         except (KeyError, AttributeError, TypeError):
             log.warning(f"Unimod entry not found for : {mod}")
-    return mod_composition
+    return total_mod_composition
 
 
 def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
