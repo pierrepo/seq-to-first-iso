@@ -382,7 +382,7 @@ def get_mods_composition(modifications):
             # Using set comparison here won't work with elements as isotopes.
             for elem in mod_composition:
                 if not elem in USED_ELEMS:
-                    log.warning(f"{elem} is not supported in the computation"
+                    log.warning(f"{elem} is not supported in the computation "
                                 "of M0 and M1")
 
         except (KeyError, AttributeError, TypeError):
@@ -490,8 +490,8 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     # Take raw sequence if available.
     if raw_sequences:
         df_peptides.rename(index=str, columns={"sequence": "pure_seq",
-                                               "raw_sequence": "sequence"})
-
+                                               "raw_sequence": "sequence"},
+                           inplace=True)
     if annotations:
         wanted_columns.insert(0, "annotation")
 
