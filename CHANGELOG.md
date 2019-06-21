@@ -2,6 +2,8 @@
 
 **Dev**
 
+**0.4.0** (2019-06-21)
+
 *Changed*
 - Add support for Xtandem Parsing
   - **Breaking change:** sequence_parser() now returns a dict with "annotations", "raw_sequences", "sequences", "modifications" and "ignored_lines"
