@@ -8,6 +8,7 @@
 *.tsv
 !reference*
 !tests/test_data/sample*
+!demo/peptides_stfi.tsv
 
 # Files for packaging
 build/

@@ -2,6 +2,9 @@
 
 > Compute first isotopologues intensity from peptide sequence
 
+The program differentiate labelled and unlabelled amino acids
+for a 99.99 % 12C enrichment.
+
 ## Installation
 
 ### pip-based
@@ -13,7 +16,7 @@ $ pip install seq-to-first-iso
 ### Developer mode
 
 
-Install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
+Install [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
 Clone repo:
 ```
@@ -26,7 +29,7 @@ Create conda environment:
 $ conda env create -f environment.yml
 ```
 
-Remarque: for a fully reproducible environment, you could also use:
+Remark: for a fully reproducible environment, you could also use:
 ```
 $ conda env create -f environment.lock.yml
 ```
@@ -57,6 +60,8 @@ $ seq-to-first-iso filename [-o output_name] [-n amino_acids...]
 Optional arguments are in square brackets  
 This will create _filename.tsv_ if filename is a correct file
 
+**0.3.0 :** The input file can have annotations separated by a tabulation before the sequences  
+**0.4.0 :** Support for [X!Tandem](https://www.thegpm.org/tandem/) Post-Translational Modifications added
 
 ### Options
 
@@ -74,7 +79,7 @@ Take 1 or more amino acid separated by a comma
 
 - You can provide a list of amino acids which will keep default isotopic abundance:
 
-Supposing [peptides.txt](demo/peptides.txt) :
+Supposing [peptides.txt](https://github.com/pierrepo/seq-to-first-iso/blob/master/demo/peptides.txt) :
 
 ```
 YAQEISR
@@ -86,7 +91,7 @@ The command
 ```shell
 $ python seq_to_first_iso.py peptides.txt -n V,W
 ```
-will create [peptides.tsv](demo/peptides.tsv) :
+will create [peptides_stfi.tsv](https://github.com/pierrepo/seq-to-first-iso/blob/master/demo/peptides_stfi.tsv) :
 
 |sequence| mass| formula|formula_X| M0_NC| M1_NC| M0_12C| M1_12C|
 |--------|-----|--------|---------|------|------|-------|-------|
@@ -111,7 +116,7 @@ will create a file named *sequence.tsv*
 - **Bioconda**:
   - Grüning, Björn, Ryan Dale, Andreas Sjödin, Brad A. Chapman, Jillian Rowe, Christopher H. Tomkins-Tinch, Renan Valieris, the Bioconda Team, and Johannes Köster. 2018. “Bioconda: Sustainable and Comprehensive Software Distribution for the Life Sciences”. Nature Methods, 2018 doi:10.1038/s41592-018-0046-7.
 
-- **pyteomics**:
+- **Pyteomics**:
   - Goloborodko, A.A.; Levitsky, L.I.; Ivanov, M.V.; and Gorshkov, M.V. (2013) “Pyteomics - a Python Framework for Exploratory Data Analysis and Rapid Software Prototyping in Proteomics”, Journal of The American Society for Mass Spectrometry, 24(2), 301–304. DOI: 10.1007/s13361-012-0516-6
 
   - Levitsky, L.I.; Klein, J.; Ivanov, M.V.; and Gorshkov, M.V. (2018) “Pyteomics 4.0: five years of development of a Python proteomics framework”, Journal of Proteome Research. DOI: 10.1021/acs.jproteome.8b00717
