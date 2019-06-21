@@ -1,16 +1,48 @@
 
-"""Create a tsv file from a file of sequences.
+"""Compute first two isotopologues intensities from sequences.
+
+The program differentiate labelled and unlabelled amino acids
+for the case of a 99.99 % C[12] enrichment.
 
 Read a file composed of sequences of amino acids on each line and return :
-    sequence,
-    mass,
-    normal formula and formula with unlabelled amino acids,
-    M0 and M1 in normal and C[12] conditions
+    sequence, mass, formula, formula_X, M0_NC, M1_NC, M0_12C and M1_12C
 as a tsv file.
+Where formula X is the chemical formula with carbon of unlabelled
+amino acids marked as X.
+NC are Normal Conditions, 12C are C[12] enrichment Conditions.
 
-Unlabelled amino acids's carbons keep default isotopic abundance,
+
+Example
+-------
+Running the script directly
+    $ python seq_to_first_iso sequences.txt
+will provide file 'sequences_stfi.tsv'
+
+
+Notes
+-----
+Carbon of unlabelled amino acids keep default isotopic abundance,
 and are represented as X in formulas.
 Naming conventions for isotopes follow pyteomics's conventions.
+
+
+Attributes
+----------
+AMINO_ACIDS : set
+    Set of supported 1-letter amino acids.
+XTANDEM_MOD_PATTERN : re.Pattern
+    Regular expression capturing XTandem Post Translational Modifications.
+UNIMOD_MODS : pyteomics.mass.Unimod
+    Dictionary with Unimods entries.
+USED_ELEMS : str
+    String of used/recognized elements.
+isotopic_abundance : dict
+    Dictionary of isotopic abundances with values taken from MIDAs.
+C12_abundance : dict
+    Dictionary of isotopic abundances with C[12] abundance at 0.9999.
+log : logging.Logger
+    Logger outputting in text terminals.
+
 """
 
 import argparse
@@ -117,22 +149,35 @@ def user_input(args):
 
 
 def sequence_parser(file, sep="\t"):
-    """Return (annotations, sequences, ignored_lines) parsed from a file.
+    """Return information on sequences parsed from a file.
 
-    Take a filename as argument.
-    The file can either just have sequences for each line or
-    can have have annotations and sequences with a separator in-between.
-    Supports Xtandem's Post-Translational Modification notation.
+    Parameters
+    ----------
+    file : str
+        Filename, the file can either just have sequences for each line or
+        can have have annotations and sequences with a separator in-between.
+    sep : str, optional
+        Separator for files with annotations.
 
-    Returns a dict with:
+    Returns
+    -------
+    dict
+        Parsed output with "key: values" :
         - "annotations": a list of annotations if any.
         - "raw_sequences": a list of unmodified peptide sequences.
         - "sequences": a list of uppercase peptide sequences.
         - "modifications": a list of lists of PTMs.
         - "ignored_lines": and the number of ignored lines.
 
-    Beware: the function uses the first line to evaluate if the file has
+    Warnings
+    --------
+    The function uses the first line to evaluate if the file has
     annotations or not, hence a file should have a consistent format.
+
+    Notes
+    -----
+    Supports Xtandem's Post-Translational Modification notation (0.4.0).
+
     """
     # Obtain a list of sequences as string if they are amino acids.
     with open(file, "r") as filin:
@@ -197,10 +242,22 @@ def sequence_parser(file, sep="\t"):
 def compute_M0(f, a):
     """Return the monoisotopic abundance M0 of a sequence with its formula.
 
-    f is the chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}
-    a is the abundance of isotopes, as a dict in the format:
-        {element_name[isotope_number]: relative abundance, ..}
+    Parameters
+    ----------
+    f : pyteomics.mass.Composition
+        Chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}.
+    a : dict
+        Dictionary of abundances of isotopes, in the format:
+        {element_name[isotope_number]: relative abundance, ..}.
+
+    Returns:
+    float
+        Value of M0.
+
+    Notes
+    -----
+    Unused. Use compute_M0_nl instead.
 
     """
     M0 = a["C[12]"]**f["C"] * a["H[1]"]**f["H"] * a["N[14]"]**f["N"] \
@@ -211,10 +268,22 @@ def compute_M0(f, a):
 def compute_M1(f, a):
     """Compute abundance of second isotopologue M1 from its formula.
 
-    f is the chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}
-    a is the abundance of isotopes, as a dict in the format:
-        {element_name[isotope_number]: relative abundance, ..}
+    Parameters
+    ----------
+    f : pyteomics.mass.Composition
+        Chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}.
+    a : dict
+        Dictionary of abundances of isotopes, in the format:
+        {element_name[isotope_number]: relative abundance, ..}.
+
+    Returns:
+    float
+        Value of M1.
+
+    Notes
+    -----
+    Unused. Use compute_M1_nl instead.
 
     """
     M1 = (
@@ -254,12 +323,20 @@ def compute_M1(f, a):
 def separate_labelled(sequence, unlabelled_aa):
     """Get the sequence of unlabelled amino acids from a sequence.
 
-    sequence is a string of amino acids
-    unlabelled_aa is a container (list, string...) of unlabelled amino acids
+    Parameters
+    ----------
+    sequence : str
+        String of amino acids
+    unlabelled_aa
+        Container (list, string...) of unlabelled amino acids
 
-    Returns the sequences as a tuple of string with:
-        the sequence without the unlabelled amino acids
-        the unlabelled amino acids in the sequence
+    Returns
+    -------
+    tuple(str, str)
+        The sequences as a tuple of string with:
+        - the sequence without the unlabelled amino acids
+        - the unlabelled amino acids in the sequence
+
     """
     labelled_seq = []
     unlabelled_seq = []
@@ -274,12 +351,23 @@ def separate_labelled(sequence, unlabelled_aa):
 def compute_M0_nl(f, a):
     """Return the monoisotopic abundance M0 of a formula with mixed labels.
 
-    f is the chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}
-    a is the abundance of isotopes, as a dict in the format:
-        {element_name[isotope_number]: relative abundance, ..}
+    Parameters
+    ----------
+    f : pyteomics.mass.Composition
+        Chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}.
+    a : dict
+        Dictionary of abundances of isotopes, in the format:
+        {element_name[isotope_number]: relative abundance, ..}.
 
+    Returns:
+    float
+        Value of M0.
+
+    Notes
+    -----
     X represents C with default isotopic abundance.
+
     """
     M0 = a["C[12]"]**f["C"] * a["X[12]"]**f["X"] * a["H[1]"]**f["H"] \
         * a["N[14]"]**f["N"] * a["O[16]"]**f["O"] * a["S[32]"]**f["S"]
@@ -289,12 +377,23 @@ def compute_M0_nl(f, a):
 def compute_M1_nl(f, a):
     """Compute abundance of second isotopologue M1 from its formula.
 
-    f is the chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}
-    a is the abundance of isotopes, as a dict in the format:
-        {element_name[isotope_number]: relative abundance, ..}
+    Parameters
+    ----------
+    f : pyteomics.mass.Composition
+        Chemical formula, as a dict of counts for each element:
+        {element_name: count_of_element_in_sequence, ...}.
+    a : dict
+        Dictionary of abundances of isotopes, in the format:
+        {element_name[isotope_number]: relative abundance, ..}.
 
+    Returns:
+    float
+        Value of M1.
+
+    Notes
+    -----
     X represents C with default isotopic abundance.
+
     """
     M1 = (
           (f["C"] * a["C[12]"]**(f["C"]-1) * a["C[13]"]
@@ -353,9 +452,19 @@ def formula_to_str(composition):
 
 
 def seq_to_midas(sequence_l, sequence_nl):
-    """Take 2 amino acid sequences and return the formula for MIDAs.
+    """Take 2 amino acid sequences and return the composition for MIDAs.
 
-    Note: the function assumes the second sequence has no terminii.
+    Parameters
+    ----------
+    sequence_l : str
+        Sequence with labelled amino acids.
+    sequence_nl : str
+        Sequence where amino acids are not labelled.
+
+    Notes
+    -----
+    The function assumes the second sequence has no terminii.
+
     """
     formula_l = mass.Composition(sequence_l)
     formula_nl = mass.Composition(parsed_sequence=sequence_nl)
@@ -369,10 +478,18 @@ def seq_to_midas(sequence_l, sequence_nl):
 def get_mods_composition(modifications):
     """Return the composition of a list of modifications.
 
-    Takes a list of modifications (Corresponding to Unimod titles)
-    Returns the total pyteomics.mass.Composition()
+    Parameters
+    ----------
+    modifications: list of str
+        List of modifications string (corresponding to Unimod titles).
 
-    Have the mass.Unimod() dict as parameter ?
+    Returns
+    -------
+    pyteomics.mass.Composition
+        The total composition change.
+
+    ???: Have the mass.Unimod() dict as parameter ?
+
     """
     total_mod_composition = mass.Composition()
     for mod in modifications:
@@ -381,7 +498,7 @@ def get_mods_composition(modifications):
             total_mod_composition += mod_composition
             # Using set comparison here won't work with elements as isotopes.
             for elem in mod_composition:
-                if not elem in USED_ELEMS:
+                if elem not in USED_ELEMS:
                     log.warning(f"{elem} is not supported in the computation "
                                 "of M0 and M1")
 
@@ -393,16 +510,33 @@ def get_mods_composition(modifications):
 def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     """Create a dataframe from sequences and return its name.
 
-    Input:
-        - sequences : a list of pure peptide sequences.
-        - unlabelled_aa: a container of unlabelled amino acids.
-        - (optional) annotations : a list of IDs for the sequences
-        - (optional) raw_sequences : a list of sequences with Xtandem PTMs.
-        - (optional) modifications : a list of modifications for raw_sequences.
+    Parameters
+    ----------
+    sequences : list of str
+        List of pure peptide sequences string.
+    unlabelled_aa : container object
+        Container of unlabelled amino acids.
+    **kwargs
+        Optional keyword arguments:
+            annotations : list of str, optional
+                 List of IDs for the sequences.
+            raw_sequences : list of str, optional
+                 List of sequences with Xtandem PTMs.
+            modifications : list of str, optional
+                 List of modifications for raw_sequences.
 
+    Returns
+    -------
+    pandas.Dataframe
+        Dataframe with : annotation (optional), sequence, mass,
+                         formula, formula_X, M0_NC, M1_NC, M0_12C, M1_12C.
+
+    Warnings
+    --------
     If raw_sequence is provided, modifications must also be provided.
 
     TODO: change name with version change.
+
     """
     accepted_input = ["sequences", "unlabelled_aa", "annotations",
                       "raw_sequences", "modifications"]
