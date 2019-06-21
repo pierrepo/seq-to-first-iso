@@ -29,7 +29,7 @@ Naming conventions for isotopes follow pyteomics's conventions.
 
 __authors__ = "Lilian Yang-crosson, Pierre Poulain"
 __license__ = "BSD 3-Clause License"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __maintainer__ = "Pierre Poulain"
 __email__ = "pierre.poulain@cupnet.net"
 
