@@ -1,6 +1,6 @@
 # Seq-to-first-iso
 
-> Compute first isotopologues intensity from peptide sequence
+> Compute first two isotopologues intensity from peptide sequence
 
 The program differentiate labelled and unlabelled amino acids
 for a 99.99 % 12C enrichment.
@@ -58,7 +58,7 @@ Once installed, the script can be called with:
 $ seq-to-first-iso filename [-o output_name] [-n amino_acids...]
 ```
 Optional arguments are in square brackets  
-This will create _filename.tsv_ if filename is a correct file
+This will create _filename_stfi.tsv_ if filename is a correct file
 
 **0.3.0 :** The input file can have annotations separated by a tabulation before the sequences  
 **0.4.0 :** Support for [X!Tandem](https://www.thegpm.org/tandem/) Post-Translational Modifications added
@@ -89,7 +89,7 @@ LAMVIIKEFVDDLK
 
 The command
 ```shell
-$ python seq_to_first_iso.py peptides.txt -n V,W
+$ seq-to-first-iso peptides.txt -n V,W
 ```
 will create [peptides_stfi.tsv](https://github.com/pierrepo/seq-to-first-iso/blob/master/demo/peptides_stfi.tsv) :
 
@@ -105,7 +105,7 @@ Where, in 12C enrichment conditions, the isotopologue intensity M0_12C and M1_12
 - You can change the name of the output file:
 
 ```shell
-$ python seq_to_first_iso.py peptides.txt -o sequence
+$ seq-to-first-iso peptides.txt -o sequence
 ```
 will create a file named *sequence.tsv*
 

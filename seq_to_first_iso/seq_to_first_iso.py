@@ -28,6 +28,8 @@ Naming conventions for isotopes follow pyteomics's conventions.
 
 Attributes
 ----------
+USAGE_ERROR : str
+    Default message for errors.
 AMINO_ACIDS : set
     Set of supported 1-letter amino acids.
 XTANDEM_MOD_PATTERN : re.Pattern
@@ -104,7 +106,24 @@ C12_abundance["C[13]"] = 1-prop
 
 
 def user_input(args):
-    """Parse and handle the submitted command line."""
+    """Parse and handle the submitted command line.
+
+    Parameters
+    ----------
+    args : list of str
+        List of arguments received from the CLI.
+
+    Returns
+    -------
+    argparse.Namespace
+        Object containing the arguments parsed from the CLI.
+
+    Raises
+    ------
+    SystemExit
+        If the file provided is not found.
+
+    """
     parser = argparse.ArgumentParser(
         description="Read a file of sequences and creates a tsv file")
 
@@ -443,7 +462,24 @@ def compute_M1_nl(f, a):
 
 
 def formula_to_str(composition):
-    """Return formula from Composition as a string."""
+    """Return formula from Composition as a string.
+
+    Parameters
+    ----------
+    composition : pyteomics.mass.Composition
+        Chemical formula.
+
+    Returns
+    -------
+    str
+        Human-readable string of the formula.
+
+    Warnings
+    --------
+    If the composition has elements not in USED_ELEMS, they will not
+    be added to the output.
+
+    """
     formula_str = ""
     for element in USED_ELEMS:
         if element in composition:
@@ -633,7 +669,28 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
 
 
 def cli(args=None):
-    """Entry point for seq_to_first_iso's CLI."""
+    """Entry point for seq_to_first_iso's CLI.
+
+    Parameters
+    ----------
+    args : list of str, optional
+        CLI arguments, args are used for testing.
+
+    Returns
+    -------
+    None
+        Writes a tsv file.
+
+    Raises
+    ------
+    SystemExit
+        If no sequences were found on the file.
+
+    Notes
+    -----
+    Main function of the script, for use with CLI.
+
+    """
     if not args:
         args = sys.argv[1:]
 
