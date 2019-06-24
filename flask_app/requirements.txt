@@ -1,6 +1,6 @@
 pandas==0.24.2
 pyteomics[Unimod]==4.1
-seq-to-first-iso==0.3.0
+seq-to-first-iso==0.4.1
 flask==1.0.2
 flask-wtf==0.14.2
 gunicorn==19.9.0
