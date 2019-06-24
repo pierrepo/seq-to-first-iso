@@ -23,6 +23,7 @@ from werkzeug.utils import secure_filename
 
 from app import app
 from seq_to_first_iso import sequence_parser, seq_to_tsv
+from seq_to_first_iso import __version__ as stfi_version
 
 
 DICT_AMINO_ACIDS = {"A": "(A) Alanine",
@@ -191,7 +192,7 @@ def wtfupload():
 
         return redirect(url_for("progress", thread_id=thread_id))
 
-    return render_template("upload.html", form=form)
+    return render_template("upload.html", form=form, version=stfi_version)
 
 
 @app.route("/progress/<int:thread_id>")
