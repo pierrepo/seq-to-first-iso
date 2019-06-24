@@ -146,7 +146,10 @@ def wtfupload():
 
         # Verification of file format.
         try:
-            annotations, sequences, ignored_lines = sequence_parser(filepath)
+            parsed_output = sequence_parser(filepath)
+            sequences = parsed_output["sequences"]
+            # Remove from parsed_output dict.
+            ignored_lines = parsed_output.pop("ignored_lines")
         except UnicodeDecodeError as ude:
             return render_template("error.html",
                                    error=f"{ude}<br>"
@@ -154,6 +157,7 @@ def wtfupload():
                                    info="Make sure your file "
                                         + "is not a binary file")
         except Exception:
+            # Often due to sequence_parser.
             return render_template("error.html",
                                    error="The file cannot be parsed")
 
@@ -165,7 +169,8 @@ def wtfupload():
 
         # Make it a var in session ?
         if ignored_lines:
-            flash(f"{ignored_lines} lines ignored out of {len(sequences)}")
+            total_lines = len(sequences) + ignored_lines
+            flash(f"{ignored_lines} lines ignored out of {total_lines}")
 
         session["amino_acids"] = ", ".join(checked)
         session["status"] = "Processing sequences"
@@ -179,13 +184,9 @@ def wtfupload():
 
         # Create a thread for seq_to_tsv and start it.
         threads[thread_id] = ThreadWithReturnValue(target=seq_to_tsv,
-                                                   kwargs={"sequences":
-                                                           sequences,
-                                                           "unlabelled_aa":
+                                                   kwargs={"unlabelled_aa":
                                                            checked,
-                                                           "annotations":
-                                                           annotations,
-                                                           })
+                                                           **parsed_output})
         threads[thread_id].start()
 
         return redirect(url_for("progress", thread_id=thread_id))
