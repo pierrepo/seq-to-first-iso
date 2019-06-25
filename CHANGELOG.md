@@ -2,6 +2,8 @@
 
 **Dev**
 
+**0.4.2** (2019-06-25)
+
 - Fix *setup.cfg*'s installation requirements
 
 **0.4.1** (2019-06-24)
