@@ -157,8 +157,10 @@ def wtfupload():
                                          + "The file provided cannot be read",
                                    info="Make sure your file "
                                         + "is not a binary file")
-        except Exception:
+        except Exception as exce:
             # Often due to sequence_parser.
+            # For server-side debugging.
+            print(f"{exce}")
             return render_template("error.html",
                                    error="The file cannot be parsed")
 

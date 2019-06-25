@@ -2,6 +2,8 @@
 
 **Dev**
 
+- Fix *setup.cfg*'s installation requirements
+
 **0.4.1** (2019-06-24)
 
 - Extends numpydoc style to all functions in *seq_to_first_iso.py*
