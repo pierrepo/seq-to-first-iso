@@ -186,7 +186,7 @@ def sequence_parser(file, sep="\t"):
         - "raw_sequences": a list of unmodified peptide sequences.
         - "sequences": a list of uppercase peptide sequences.
         - "modifications": a list of lists of PTMs.
-        - "ignored_lines": and the number of ignored lines.
+        - "ignored_lines": the number of ignored lines.
 
     Warnings
     --------
@@ -497,6 +497,11 @@ def seq_to_midas(sequence_l, sequence_nl):
     sequence_nl : str
         Sequence where amino acids are not labelled.
 
+    Returns
+    -------
+    pyteomics.mass.Composition
+        Composition with unlabelled carbon as element X.
+
     Notes
     -----
     The function assumes the second sequence has no terminii.
@@ -524,9 +529,8 @@ def get_mods_composition(modifications):
     pyteomics.mass.Composition
         The total composition change.
 
-    ???: Have the mass.Unimod() dict as parameter ?
-
     """
+    # ???: Have the mass.Unimod() dict as parameter ?
     total_mod_composition = mass.Composition()
     for mod in modifications:
         try:
@@ -535,8 +539,8 @@ def get_mods_composition(modifications):
             # Using set comparison here won't work with elements as isotopes.
             for elem in mod_composition:
                 if elem not in USED_ELEMS:
-                    log.warning(f"{elem} is not supported in the computation "
-                                "of M0 and M1")
+                    log.warning(f"{elem} in ({mod}) is not supported "
+                                "in the computation of M0 and M1")
 
         except (KeyError, AttributeError, TypeError):
             log.warning(f"Unimod entry not found for : {mod}")
@@ -571,9 +575,8 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     --------
     If raw_sequence is provided, modifications must also be provided.
 
-    TODO: change name with version change.
-
     """
+    # TODO: change name with version change.
     accepted_input = ["sequences", "unlabelled_aa", "annotations",
                       "raw_sequences", "modifications"]
     for key in kwargs:

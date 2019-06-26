@@ -219,7 +219,7 @@ def test_get_mods_composition(get_mods, caplog):
     assert "entry not found" in caplog.text
     # Mod with element not in CHONPSX.
     get_mods_composition(["Heme"])
-    assert "Fe is not supported" in caplog.text
+    assert "(Heme) is not supported" in caplog.text
     for data in get_mods:
         modifications = data[0]
         expected = data[1]
