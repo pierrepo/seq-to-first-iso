@@ -2,13 +2,15 @@
 
 **Dev**
 
+- Fix requirements not being installed with `pip install`
+
 **0.4.2** (2019-06-25)
 
 - Fix *setup.cfg*'s installation requirements
 
 **0.4.1** (2019-06-24)
 
-- Extends numpydoc style to all functions in *seq_to_first_iso.py*
+- Extend numpydoc style to all functions in *seq_to_first_iso.py*
 
 **0.4.0** (2019-06-21)
 
