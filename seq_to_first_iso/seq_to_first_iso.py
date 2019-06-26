@@ -487,8 +487,10 @@ def formula_to_str(composition):
     return formula_str
 
 
-def seq_to_midas(sequence_l, sequence_nl):
-    """Take 2 amino acid sequences and return the composition for MIDAs.
+def seq_to_xcomp(sequence_l, sequence_nl):
+    """Take 2 amino acid sequences and return the composition with X.
+
+    The second sequence will have its C replaced by X.
 
     Parameters
     ----------
@@ -504,7 +506,7 @@ def seq_to_midas(sequence_l, sequence_nl):
 
     Notes
     -----
-    The function assumes the second sequence has no terminii.
+    The function assumes the second sequence has no terminii (H-, -OH).
 
     """
     formula_l = mass.Composition(sequence_l)
@@ -547,7 +549,7 @@ def get_mods_composition(modifications):
     return total_mod_composition
 
 
-def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
+def seq_to_df(sequences, unlabelled_aa, **kwargs):
     """Create a dataframe from sequences and return its name.
 
     Parameters
@@ -576,7 +578,6 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     If raw_sequence is provided, modifications must also be provided.
 
     """
-    # TODO: change name with version change.
     accepted_input = ["sequences", "unlabelled_aa", "annotations",
                       "raw_sequences", "modifications"]
     for key in kwargs:
@@ -625,7 +626,7 @@ def seq_to_tsv(sequences, unlabelled_aa, **kwargs):
     df_peptides["f"] = df_peptides["sequence"].apply(mass.Composition)
     # Composition, with unlabelled C as element X.
     df_peptides["f_X"] = df_peptides.apply(lambda x:
-                                           seq_to_midas(x["labelled"],
+                                           seq_to_xcomp(x["labelled"],
                                                         x["unlabelled"]),
                                            axis=1)
 
@@ -724,7 +725,7 @@ def cli(args=None):
     else:
         output_file = options.output + ".tsv"
 
-    df = seq_to_tsv(unlabelled_aa=unlabelled_aa, **parsed_output)
+    df = seq_to_df(unlabelled_aa=unlabelled_aa, **parsed_output)
     df.to_csv(output_file, sep="\t", index=False)
 
 

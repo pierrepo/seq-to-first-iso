@@ -176,8 +176,8 @@ def test_deprecated_computation_isotopologue():
 
 
 def test_formula_X():
-    assert stfi.seq_to_midas("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
-    assert stfi.seq_to_midas("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
+    assert stfi.seq_to_xcomp("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
+    assert stfi.seq_to_xcomp("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
 
 
 def test_computation_isotopologue():
@@ -189,7 +189,7 @@ def test_computation_isotopologue():
     assert stfi.compute_M1_nl(test_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
     assert stfi.compute_M1_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
 
-    unlabelled_composition = stfi.seq_to_midas("AC", "DE")
+    unlabelled_composition = stfi.seq_to_xcomp("AC", "DE")
     assert stfi.compute_M0_nl(unlabelled_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
     assert stfi.compute_M0_nl(unlabelled_composition, stfi.C12_abundance) == pytest.approx(0.8279079739944033, REL)
 
@@ -200,7 +200,7 @@ def test_computation_isotopologue():
 def test_string_casting():
     assert stfi.formula_to_str(mass.Composition("ACDE")) == "C15H24O9N4S1"
 
-    test_formula_X = stfi.seq_to_midas("ACDE", "FGH")
+    test_formula_X = stfi.seq_to_xcomp("ACDE", "FGH")
     assert stfi.formula_to_str(test_formula_X) == "C15H43O12N9S1X17"
 
 
@@ -226,7 +226,7 @@ def test_get_mods_composition(get_mods, caplog):
         assert get_mods_composition(modifications) == expected
 
 
-def test_seq_to_tsv(caplog):
+def test_seq_to_df(caplog):
 #    sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
 #    output_file = data_dir.joinpath("output.tsv")
 #    unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
@@ -242,13 +242,13 @@ def test_seq_to_tsv(caplog):
 #    assert filecmp.cmp(unlabelled_output_file, data_dir.joinpath("reference_sequence_AT.tsv"), shallow=False)
     # Parse non valid sequence.
     with pytest.raises(PyteomicsError):
-        stfi.seq_to_tsv(["b"], [])
+        stfi.seq_to_df(["b"], [])
     # Testing  annotations and sequences with different lengths.
-    df = stfi.seq_to_tsv(["AC"], [], annotations=["id1", "id2"])
+    df = stfi.seq_to_df(["AC"], [], annotations=["id1", "id2"])
     assert "different lengths" in caplog.text
     assert type(df) is pd.DataFrame
     # Annotations and sequences with same length.
-    df = stfi.seq_to_tsv(["AC"], [], annotations=["id1"])
+    df = stfi.seq_to_df(["AC"], [], annotations=["id1"])
     assert type(df) is pd.DataFrame
 
     # Test verification with modifications
@@ -256,10 +256,10 @@ def test_seq_to_tsv(caplog):
                     "raw_sequences":["A"], "not_modifications":[]}
     no_rseq_input = {"sequences": ["A"], "unlabelled_aa":[],
                      "modifications":["Oxidation"]}
-    stfi.seq_to_tsv(**no_mod_input)
+    stfi.seq_to_df(**no_mod_input)
     assert "not_modifications not recognized" in caplog.text
     assert "raw_sequences and modifications have different" in caplog.text
-    stfi.seq_to_tsv(**no_rseq_input)
+    stfi.seq_to_df(**no_rseq_input)
     assert "raw_sequences and sequences have different" in caplog.text
 
 
