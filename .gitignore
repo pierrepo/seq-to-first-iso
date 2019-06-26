@@ -26,3 +26,6 @@ __pycache__/
 
 # Flask application
 uploads/
+
+# Jupyter notebook
+.ipynb_checkpoints
