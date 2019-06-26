@@ -56,6 +56,8 @@ import sys
 import pandas as pd
 from pyteomics import mass
 
+from seq_to_first_iso import __version__
+
 
 USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
              + "[-o output] [-n aa]"
@@ -136,6 +138,9 @@ def user_input(args):
     parser.add_argument("-n", "--non-labelled-aa",
                         metavar="amino_a",
                         help="amino acids with default abundance")
+
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s {}'.format(__version__))
 
     options = parser.parse_args(args)
 

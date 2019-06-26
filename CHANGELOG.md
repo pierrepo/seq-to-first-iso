@@ -2,12 +2,21 @@
 
 **Dev**
 
+*Added*
+- Flag for version number
+
+*Changed*
+- **Breaking change** : changed seq_to_midas() to seq_to_xcomp()
+- **Breaking change** : changed seq_to_tsv() to seq_to_df()
+
 **0.4.3** (2019-06-26)
 
+*Fixed*
 - Fix requirements not being installed with `pip install`
 
 **0.4.2** (2019-06-25)
 
+*Fixed*
 - Fix *setup.cfg*'s installation requirements
 
 **0.4.1** (2019-06-24)
