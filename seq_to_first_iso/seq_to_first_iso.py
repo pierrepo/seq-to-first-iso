@@ -1,15 +1,9 @@
 
-"""Compute first two isotopologues intensities from sequences.
+"""Main module of seq_to_first_iso.
 
-The program differentiate labelled and unlabelled amino acids
+Provide function to compute M0 and M1 with labelled and unlabelled amino acids
 for the case of a 99.99 % C[12] enrichment.
-
-Read a file composed of sequences of amino acids on each line and return :
-    sequence, mass, formula, formula_X, M0_NC, M1_NC, M0_12C and M1_12C
-as a tsv file.
-Where formula X is the chemical formula with carbon of unlabelled
-amino acids marked as X.
-NC are Normal Conditions, 12C are C[12] enrichment Conditions.
+The Command-Line Interface is defined here.
 
 
 Example
@@ -37,7 +31,7 @@ XTANDEM_MOD_PATTERN : re.Pattern
 UNIMOD_MODS : pyteomics.mass.Unimod
     Dictionary with Unimods entries.
 USED_ELEMS : str
-    String of used/recognized elements.
+    String of elements used/recognized by the program.
 isotopic_abundance : dict
     Dictionary of isotopic abundances with values taken from MIDAs.
 C12_abundance : dict
@@ -173,7 +167,7 @@ def user_input(args):
 
 
 def sequence_parser(file, sep="\t"):
-    """Return information on sequences parsed from a file.
+    r"""Return information on sequences parsed from a file.
 
     Parameters
     ----------
@@ -181,7 +175,7 @@ def sequence_parser(file, sep="\t"):
         Filename, the file can either just have sequences for each line or
         can have have annotations and sequences with a separator in-between.
     sep : str, optional
-        Separator for files with annotations.
+        Separator for files with annotations (default is "\t").
 
     Returns
     -------
@@ -201,6 +195,7 @@ def sequence_parser(file, sep="\t"):
     Notes
     -----
     Supports Xtandem's Post-Translational Modification notation (0.4.0).
+    Supports annotations (0.3.0).
 
     """
     # Obtain a list of sequences as string if they are amino acids.
@@ -350,9 +345,9 @@ def separate_labelled(sequence, unlabelled_aa):
     Parameters
     ----------
     sequence : str
-        String of amino acids
-    unlabelled_aa
-        Container (list, string...) of unlabelled amino acids
+        String of amino acids.
+    unlabelled_aa : container object
+        Container (list, string...) of unlabelled amino acids.
 
     Returns
     -------
@@ -683,7 +678,7 @@ def cli(args=None):
     Parameters
     ----------
     args : list of str, optional
-        CLI arguments, args are used for testing.
+        CLI arguments, args are used for testing (default is None for CLI).
 
     Returns
     -------
