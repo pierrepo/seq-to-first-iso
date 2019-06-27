@@ -1,3 +1,4 @@
 # required for the column tool
-bsdmaintools
+bsdmainutils
+
 
