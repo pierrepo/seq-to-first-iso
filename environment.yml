@@ -18,3 +18,9 @@ dependencies:
   - bumpversion
   - pytest
   - pytest-cov
+  - sphinx
+  - nbsphinx
+  - sphinx_rtd_theme
+  - pip:
+    - nbsphinx-link
+    - recommonmark
