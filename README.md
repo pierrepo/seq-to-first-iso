@@ -3,7 +3,8 @@
 > Compute first two isotopologues intensity from peptide sequence
 
 The program differentiate labelled and unlabelled amino acids
-for a 99.99 % 12C enrichment.
+for a 99.99 % 12C enrichment.  
+Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pierrepo/seq-to-first-iso/master) 
 
 ## Installation
 
