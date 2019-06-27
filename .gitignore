@@ -1,6 +1,5 @@
 # input files
 *.txt
-!apt.txt
 !LICENSE.txt
 !requirements.txt
 !sample*
