@@ -1,4 +1,0 @@
-# required for the column tool
-bsdmainutils
-
-
