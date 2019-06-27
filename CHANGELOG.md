@@ -4,6 +4,7 @@
 
 *Added*
 - Flag for version number
+- Jupyter notebook with Binder environment for demonstrations
 
 *Changed*
 - **Breaking change** : changed seq_to_midas() to seq_to_xcomp()

@@ -4,7 +4,7 @@
 
 The program differentiate labelled and unlabelled amino acids
 for a 99.99 % 12C enrichment.  
-Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pierrepo/seq-to-first-iso/master) 
+Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pierrepo/seq-to-first-iso/master)
 
 ## Installation
 
@@ -124,3 +124,8 @@ will create a file named *sequence.tsv*
 
 - **MIDAs**:
   - Alves G, Ogurtsov AY, Yu YK (2014) Molecular Isotopic Distribution Analysis (MIDAs) with adjustable mass accuracy. J Am Soc Mass Spectrom, 25: 57-70. DOI: 10.1007/s13361-013-0733-7
+
+- **Binder**
+  - Jupyter et al., "Binder 2.0 - Reproducible, Interactive, Sharable
+  Environments for Science at Scale." Proceedings of the 17th Python
+  in Science Conference. 2018. 10.25080/Majora-4af1f417-011
