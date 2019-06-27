@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/pierrepo/seq-to-first-iso.svg?branch=master)](https://travis-ci.org/pierrepo/seq-to-first-iso)
+[![Documentation Status](https://readthedocs.org/projects/seq-to-first-iso/badge/?version=latest)](https://seq-to-first-iso.readthedocs.io/en/latest/?badge=latest)
+
 # Seq-to-first-iso
 
 > Compute first two isotopologues intensity from peptide sequence
