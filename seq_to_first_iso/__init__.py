@@ -5,17 +5,22 @@ The program computes M0 and M1 and differentiate labelled
 (with a 99.99 % C[12] enrichment) and unlabelled amino acids.
 
 Read a file composed of amino acid sequences on each line and return :
-    sequence, mass, formula, formula_X, M0_NC, M1_NC, M0_12C and M1_12C
+sequence, mass, formula, formula_X, M0_NC, M1_NC, M0_12C and M1_12C
 in a tsv file.
-- formula_X is the chemical formula with carbon of unlabelled
+
+Formula_X is the chemical formula with carbon of unlabelled
 amino acids marked as X.
-- NC are Normal Conditions, 12C are C[12] enrichment Conditions.
+
+NC means Normal Condition, 12C means C[12] enrichment condition.
 
 
 Example
 -------
+
 Running the script after installation
+
     $ seq-to-first-iso sequences.txt
+
 will provide file 'sequences_stfi.tsv'
 
 
