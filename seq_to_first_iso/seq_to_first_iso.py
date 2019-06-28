@@ -175,7 +175,7 @@ def sequence_parser(file, sep="\t"):
         Filename, the file can either just have sequences for each line or
         can have have annotations and sequences with a separator in-between.
     sep : str, optional
-        Separator for files with annotations (default is "\t").
+        Separator for files with annotations (default is ``\t``).
 
     Returns
     -------
