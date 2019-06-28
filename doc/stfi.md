@@ -13,4 +13,4 @@ add formula
 
 # Strategy to take into account auxotrophies
 
-todo Lilian
+todo Lilian. Add more explanations here.
