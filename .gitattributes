@@ -1,0 +1,6 @@
+# Remove files from Linguist statistics
+/notebooks/** linguist-documentation
+/doc/** linguist-documentation
+
+# Normalize newlines of jupyter notebooks
+*.ipynb text=auto
