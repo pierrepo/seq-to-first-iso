@@ -180,12 +180,12 @@ def sequence_parser(file, sep="\t"):
     Returns
     -------
     dict
-        Parsed output with "key: values" :
-        - "annotations": a list of annotations if any.
-        - "raw_sequences": a list of unmodified peptide sequences.
-        - "sequences": a list of uppercase peptide sequences.
-        - "modifications": a list of lists of PTMs.
-        - "ignored_lines": the number of ignored lines.
+        | Parsed output with "key: values" :
+        |     - "annotations": a list of annotations if any.
+        |     - "raw_sequences": a list of unmodified peptide sequences.
+        |     - "sequences": a list of uppercase peptide sequences.
+        |     - "modifications": a list of lists of PTMs.
+        |     - "ignored_lines": the number of ignored lines.
 
     Warnings
     --------
@@ -194,8 +194,8 @@ def sequence_parser(file, sep="\t"):
 
     Notes
     -----
-    Supports Xtandem's Post-Translational Modification notation (0.4.0).
-    Supports annotations (0.3.0).
+    | Supports Xtandem's Post-Translational Modification notation (0.4.0).
+    | Supports annotations (0.3.0).
 
     """
     # Obtain a list of sequences as string if they are amino acids.
@@ -270,7 +270,8 @@ def compute_M0(f, a):
         Dictionary of abundances of isotopes, in the format:
         {element_name[isotope_number]: relative abundance, ..}.
 
-    Returns:
+    Returns
+    -------
     float
         Value of M0.
 
@@ -296,7 +297,8 @@ def compute_M1(f, a):
         Dictionary of abundances of isotopes, in the format:
         {element_name[isotope_number]: relative abundance, ..}.
 
-    Returns:
+    Returns
+    -------
     float
         Value of M1.
 
@@ -352,9 +354,9 @@ def separate_labelled(sequence, unlabelled_aa):
     Returns
     -------
     tuple(str, str)
-        The sequences as a tuple of string with:
-        - the sequence without the unlabelled amino acids
-        - the unlabelled amino acids in the sequence
+        | The sequences as a tuple of string with:
+        |    - the sequence without the unlabelled amino acids
+        |    - the unlabelled amino acids in the sequence
 
     """
     labelled_seq = []
@@ -379,7 +381,8 @@ def compute_M0_nl(f, a):
         Dictionary of abundances of isotopes, in the format:
         {element_name[isotope_number]: relative abundance, ..}.
 
-    Returns:
+    Returns
+    -------
     float
         Value of M0.
 
@@ -405,7 +408,8 @@ def compute_M1_nl(f, a):
         Dictionary of abundances of isotopes, in the format:
         {element_name[isotope_number]: relative abundance, ..}.
 
-    Returns:
+    Returns
+    -------
     float
         Value of M1.
 
@@ -558,24 +562,24 @@ def seq_to_df(sequences, unlabelled_aa, **kwargs):
         List of pure peptide sequences string.
     unlabelled_aa : container object
         Container of unlabelled amino acids.
-    **kwargs
-        Optional keyword arguments:
-            annotations : list of str, optional
-                 List of IDs for the sequences.
-            raw_sequences : list of str, optional
-                 List of sequences with Xtandem PTMs.
-            modifications : list of str, optional
-                 List of modifications for raw_sequences.
+    annotations : list of str, optional
+        List of IDs for the sequences.
+    raw_sequences : list of str, optional
+        List of sequences with Xtandem PTMs.
+    modifications : list of str, optional
+        List of modifications for raw_sequences.
 
     Returns
     -------
     pandas.Dataframe
-        Dataframe with : annotation (optional), sequence, mass,
-                         formula, formula_X, M0_NC, M1_NC, M0_12C, M1_12C.
+        | Dataframe with :
+        |                  annotation (optional), sequence, mass,
+                           formula, formula_X, M0_NC, M1_NC, M0_12C, M1_12C.
 
     Warnings
     --------
-    If raw_sequence is provided, modifications must also be provided.
+    If raw_sequence is provided, modifications must also be provided
+    and vice-versa.
 
     """
     accepted_input = ["sequences", "unlabelled_aa", "annotations",
