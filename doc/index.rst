@@ -6,6 +6,8 @@
 Welcome to seq-to-first-iso's documentation!
 ============================================
 
+**Version** |release|
+
 Seq-to-first-iso computes the first two isotopologues intensity from peptide sequence.
 
 It differentiates labelled and unlabelled amino acids with a 99.99 % 12C enrichment.
