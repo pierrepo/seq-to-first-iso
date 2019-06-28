@@ -83,7 +83,7 @@ Take 1 or more amino acid separated by a comma
 
 - You can provide a list of amino acids which will keep default isotopic abundance:
 
-Supposing [peptides.txt](https://github.com/pierrepo/seq-to-first-iso/blob/master/demo/peptides.txt) :
+Supposing [peptides.txt](https://github.com/pierrepo/seq-to-first-iso/blob/master/notebooks/peptides.txt) :
 
 ```
 YAQEISR
@@ -95,7 +95,7 @@ The command
 ```shell
 $ seq-to-first-iso peptides.txt -n V,W
 ```
-will create [peptides_stfi.tsv](https://github.com/pierrepo/seq-to-first-iso/blob/master/demo/peptides_stfi.tsv) :
+will create [peptides_stfi.tsv](https://github.com/pierrepo/seq-to-first-iso/blob/master/notebooks/peptides_stfi.tsv) :
 
 |sequence| mass| formula|formula_X| M0_NC| M1_NC| M0_12C| M1_12C|
 |--------|-----|--------|---------|------|------|-------|-------|
