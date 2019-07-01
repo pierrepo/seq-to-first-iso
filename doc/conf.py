@@ -14,6 +14,9 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# Import recommonmark elements for setup.
+import recommonmark
+from recommonmark.transform import AutoStructify
 
 # -- Project information -----------------------------------------------------
 
@@ -38,6 +41,7 @@ extensions = ["sphinx.ext.mathjax",
               "nbsphinx_link",
               "recommonmark"
 ]
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -66,3 +70,12 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# Configuration for using math equations in markdown with recommonmark.
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+            'enable_math': True,
+            'enable_inline_math': True,
+            }, True)
+    app.add_transform(AutoStructify)
+
