@@ -2,6 +2,8 @@
 
 **Dev**
 
+**0.5.0** (2019-07-03)
+
 *Added*
 - Flag for version number in CLI
 - Jupyter notebook with Binder environment for demonstrations
