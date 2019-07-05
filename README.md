@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/seq-to-first-iso.svg)](https://badge.fury.io/py/seq-to-first-iso)
+![Conda](https://img.shields.io/conda/v/bioconda/seq-to-first-iso.svg?color=bright-green)
 [![Build Status](https://travis-ci.org/pierrepo/seq-to-first-iso.svg?branch=master)](https://travis-ci.org/pierrepo/seq-to-first-iso)
 [![Documentation Status](https://readthedocs.org/projects/seq-to-first-iso/badge/?version=latest)](https://seq-to-first-iso.readthedocs.io/en/latest/?badge=latest)
 
@@ -7,14 +9,21 @@
 
 The program differentiate labelled and unlabelled amino acids
 for a 99.99 % 12C enrichment.  
+The documentation can be found [here](https://seq-to-first-iso.readthedocs.io/en/latest/).  
 Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pierrepo/seq-to-first-iso/master)
 
 ## Installation
 
-### pip-based
+### With pip
 
 ```
 $ pip install seq-to-first-iso
+```
+
+### With conda
+
+```
+$ conda install seq-to-first-iso -c bioconda
 ```
 
 ### Developer mode
@@ -72,6 +81,9 @@ This will create _filename_stfi.tsv_ if filename is a correct file
 - `-h, --help`:  
 Provide a help page
 
+- `-v, --version`:  
+Provide the version
+
 - `-o, --output`:  
 Change the name of the output file
 
@@ -116,19 +128,18 @@ will create a file named *sequence.tsv*
 
 ## Credits
 
+- **Binder**
+  - Jupyter et al., "Binder 2.0 - Reproducible, Interactive, Sharable
+  Environments for Science at Scale." Proceedings of the 17th Python
+  in Science Conference. 2018. 10.25080/Majora-4af1f417-011
 
 - **Bioconda**:
   - Grüning, Björn, Ryan Dale, Andreas Sjödin, Brad A. Chapman, Jillian Rowe, Christopher H. Tomkins-Tinch, Renan Valieris, the Bioconda Team, and Johannes Köster. 2018. “Bioconda: Sustainable and Comprehensive Software Distribution for the Life Sciences”. Nature Methods, 2018 doi:10.1038/s41592-018-0046-7.
+
+- **MIDAs**:
+  - Alves G, Ogurtsov AY, Yu YK (2014) Molecular Isotopic Distribution Analysis (MIDAs) with adjustable mass accuracy. J Am Soc Mass Spectrom, 25: 57-70. DOI: 10.1007/s13361-013-0733-7
 
 - **Pyteomics**:
   - Goloborodko, A.A.; Levitsky, L.I.; Ivanov, M.V.; and Gorshkov, M.V. (2013) “Pyteomics - a Python Framework for Exploratory Data Analysis and Rapid Software Prototyping in Proteomics”, Journal of The American Society for Mass Spectrometry, 24(2), 301–304. DOI: 10.1007/s13361-012-0516-6
 
   - Levitsky, L.I.; Klein, J.; Ivanov, M.V.; and Gorshkov, M.V. (2018) “Pyteomics 4.0: five years of development of a Python proteomics framework”, Journal of Proteome Research. DOI: 10.1021/acs.jproteome.8b00717
-
-- **MIDAs**:
-  - Alves G, Ogurtsov AY, Yu YK (2014) Molecular Isotopic Distribution Analysis (MIDAs) with adjustable mass accuracy. J Am Soc Mass Spectrom, 25: 57-70. DOI: 10.1007/s13361-013-0733-7
-
-- **Binder**
-  - Jupyter et al., "Binder 2.0 - Reproducible, Interactive, Sharable
-  Environments for Science at Scale." Proceedings of the 17th Python
-  in Science Conference. 2018. 10.25080/Majora-4af1f417-011

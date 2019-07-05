@@ -17,7 +17,7 @@ This guide is adapted from the [3.7 Python installation guide](https://docs.knim
 ### Set up the conda environment
 
 #### Create a conda environment
-In the GitHub repository, go to *knime/environment-knime.yml* and download the [raw version](https://raw.githubusercontent.com/pierrepo/seq-to-first-iso/master/knime/environment-knime.yml) of the file (*Right click → Save a ...*).<br>
+In the GitHub repository, go to *knime/environment-knime.yml* and download the [raw version](https://raw.githubusercontent.com/pierrepo/seq-to-first-iso/master/knime/environment-knime.yml) of the file (*Right click → Save as ...*).<br>
 Then in the directory where *environment-knime.yml* was downloaded use:
 
 ```shell
@@ -42,7 +42,10 @@ To test if your script works, try to execute it:
   ```
   chmod gou+x <script_name>
   ```
-  then execute it with `./<script_name>`
+  then execute it with
+  ```
+  ./<script_name>
+  ```
 
 ### Configure the Python extension
 
