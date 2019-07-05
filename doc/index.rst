@@ -23,6 +23,7 @@ User manual
     :maxdepth: 2
 
     stfi
+    knime_config
 
 
 Tutorial
