@@ -7,7 +7,7 @@
 
 > Compute first two isotopologues intensity from peptide sequence
 
-Seq-to-first-iso computes isotopologues M0 and M1 of peptides with a 99.99 % 12C enrichment for quantification by SLIM-labeling.  
+Seq-to-first-iso computes isotopologues M0 and M1 of peptides with a 99.99 % 12C enrichment for quantification by [SLIM-labeling](https://www.mcponline.org/content/16/11/2017).  
 It simulates auxotrophies by differentiating labelled and unlabelled amino acids.
 
 The documentation can be found [here](https://seq-to-first-iso.readthedocs.io/en/latest/).  
@@ -130,17 +130,18 @@ will create a file named *sequence.tsv*
 ## Credits
 
 - **Binder**
-  - Jupyter et al., "Binder 2.0 - Reproducible, Interactive, Sharable
-  Environments for Science at Scale." Proceedings of the 17th Python
-  in Science Conference. 2018. 10.25080/Majora-4af1f417-011
+  - Jupyter et al., "Binder 2.0 - Reproducible, Interactive, Sharable Environments for Science at Scale." Proceedings of the 17th Python in Science Conference. 2018. 10.25080/Majora-4af1f417-011
 
 - **Bioconda**:
-  - Grüning, Björn, Ryan Dale, Andreas Sjödin, Brad A. Chapman, Jillian Rowe, Christopher H. Tomkins-Tinch, Renan Valieris, the Bioconda Team, and Johannes Köster. 2018. “Bioconda: Sustainable and Comprehensive Software Distribution for the Life Sciences”. Nature Methods, 2018 doi:10.1038/s41592-018-0046-7.
+  - Grüning, Björn, Ryan Dale, Andreas Sjödin, Brad A. Chapman, Jillian Rowe, Christopher H. Tomkins-Tinch, Renan Valieris, the Bioconda Team, and Johannes Köster. 2018. “Bioconda: Sustainable and Comprehensive Software Distribution for the Life Sciences”. *Nature Methods*, 2018 doi:10.1038/s41592-018-0046-7.
 
 - **MIDAs**:
-  - Alves G, Ogurtsov AY, Yu YK (2014) Molecular Isotopic Distribution Analysis (MIDAs) with adjustable mass accuracy. J Am Soc Mass Spectrom, 25: 57-70. DOI: 10.1007/s13361-013-0733-7
+  - Alves G, Ogurtsov AY, Yu YK (2014) Molecular Isotopic Distribution Analysis (MIDAs) with adjustable mass accuracy. *J Am Soc Mass Spectrom*, 25: 57-70. DOI: 10.1007/s13361-013-0733-7
 
 - **Pyteomics**:
-  - Goloborodko, A.A.; Levitsky, L.I.; Ivanov, M.V.; and Gorshkov, M.V. (2013) “Pyteomics - a Python Framework for Exploratory Data Analysis and Rapid Software Prototyping in Proteomics”, Journal of The American Society for Mass Spectrometry, 24(2), 301–304. DOI: 10.1007/s13361-012-0516-6
+  - Goloborodko, A.A.; Levitsky, L.I.; Ivanov, M.V.; and Gorshkov, M.V. (2013) “Pyteomics - a Python Framework for Exploratory Data Analysis and Rapid Software Prototyping in Proteomics”, *Journal of The American Society for Mass Spectrometry*, 24(2), 301–304. DOI: 10.1007/s13361-012-0516-6
 
-  - Levitsky, L.I.; Klein, J.; Ivanov, M.V.; and Gorshkov, M.V. (2018) “Pyteomics 4.0: five years of development of a Python proteomics framework”, Journal of Proteome Research. DOI: 10.1021/acs.jproteome.8b00717
+  - Levitsky, L.I.; Klein, J.; Ivanov, M.V.; and Gorshkov, M.V. (2018) “Pyteomics 4.0: five years of development of a Python proteomics framework”, *Journal of Proteome Research*. DOI: 10.1021/acs.jproteome.8b00717
+
+- **SLIM-labeling**:
+  - Léger T, Garcia C, Collomb L, Camadro JM. A Simple Light Isotope Metabolic Labeling (SLIM-labeling) Strategy: A Powerful Tool to Address the Dynamics of Proteome Variations In Vivo. *Mol Cell Proteomics*. 2017;16(11):2017–2031. doi:10.1074/mcp.M117.066936
