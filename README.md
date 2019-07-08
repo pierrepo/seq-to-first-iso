@@ -7,8 +7,9 @@
 
 > Compute first two isotopologues intensity from peptide sequence
 
-The program differentiate labelled and unlabelled amino acids
-for a 99.99 % 12C enrichment.  
+Seq-to-first-iso computes isotopologues M0 and M1 of peptides with a 99.99 % 12C enrichment for quantification by SLIM-labeling.  
+It simulates auxotrophies by differentiating labelled and unlabelled amino acids.
+
 The documentation can be found [here](https://seq-to-first-iso.readthedocs.io/en/latest/).  
 Try the demo with Binder: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pierrepo/seq-to-first-iso/master)
 
