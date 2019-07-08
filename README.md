@@ -1,5 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/seq-to-first-iso.svg)](https://badge.fury.io/py/seq-to-first-iso)
-![Conda](https://img.shields.io/conda/v/bioconda/seq-to-first-iso.svg?color=bright-green)
+[![Conda](https://img.shields.io/conda/v/bioconda/seq-to-first-iso.svg?color=bright-green)](https://anaconda.org/bioconda/seq-to-first-iso)
 [![Build Status](https://travis-ci.org/pierrepo/seq-to-first-iso.svg?branch=master)](https://travis-ci.org/pierrepo/seq-to-first-iso)
 [![Documentation Status](https://readthedocs.org/projects/seq-to-first-iso/badge/?version=latest)](https://seq-to-first-iso.readthedocs.io/en/latest/?badge=latest)
 
