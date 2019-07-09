@@ -11,5 +11,4 @@ dependencies:
   - pyteomics
   - matplotlib
   - pandas=0.23
-  - pip:
-    - seq-to-first-iso
+  - seq-to-first-iso
