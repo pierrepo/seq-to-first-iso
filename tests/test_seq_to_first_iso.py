@@ -178,6 +178,8 @@ def test_deprecated_computation_isotopologue():
 def test_formula_X():
     assert stfi.seq_to_xcomp("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
     assert stfi.seq_to_xcomp("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
+    fgh_comp = mass.Composition(parsed_sequence="FGH")
+    assert stfi.seq_to_xcomp("ACDE", fgh_comp) == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
 
 
 def test_computation_isotopologue():
