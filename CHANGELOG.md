@@ -2,6 +2,8 @@
 
 **Dev**
 
+**0.5.1** (2019-07-10)
+
 *Fixed*
 - seq_to_xcomp() can now correctly take a pyteomics.mass.Composition object as the second parameter
 
