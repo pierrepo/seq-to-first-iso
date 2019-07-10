@@ -498,10 +498,10 @@ def seq_to_xcomp(sequence_l, sequence_nl):
 
     Parameters
     ----------
-    sequence_l : str
-        Sequence with labelled amino acids.
-    sequence_nl : str
-        Sequence where amino acids are not labelled.
+    sequence_l : str or pyteomics.mass.Composition
+        Sequence or composition with labelled amino acids.
+    sequence_nl : str or pyteomics.mass.Composition
+        Sequence or composition where amino acids are not labelled.
 
     Returns
     -------
@@ -510,15 +510,21 @@ def seq_to_xcomp(sequence_l, sequence_nl):
 
     Notes
     -----
-    The function assumes the second sequence has no terminii (H-, -OH).
+    | The function assumes the second sequence has no terminii (H-, -OH).
+    | Supports pyteomics.mass.Composition as argument (0.5.1).
+    | If mass.Composition objects are provided, the function assumes
+      the terminii of the second composition were already removed.
 
     """
     formula_l = mass.Composition(sequence_l)
-    formula_nl = mass.Composition(parsed_sequence=sequence_nl)
-    try:
-        formula_nl["X"] = formula_nl.pop("C")
-    except KeyError:
-        pass
+    # Verify if a mass.Composition is provided or not.
+    if isinstance(sequence_nl, mass.Composition):
+        formula_nl = mass.Composition(sequence_nl)
+    else:
+        formula_nl = mass.Composition(parsed_sequence=sequence_nl)
+
+    formula_nl["X"] = formula_nl.pop("C", 0)
+
     return formula_l+formula_nl
 
 
