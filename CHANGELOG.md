@@ -1,7 +1,10 @@
 # Changelog
 
 **Dev**
-
+- Simplify interface
+- Take .tsv as input file
+- Take peptide sequence and charge as input data (from input file)
+  
 **0.5.1** (2019-07-10)
 
 *Fixed*

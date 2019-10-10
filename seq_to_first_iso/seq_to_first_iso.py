@@ -1,4 +1,3 @@
-
 """Main module of seq_to_first_iso.
 
 Provide function to compute M0 and M1 with labelled and unlabelled amino acids
@@ -53,8 +52,8 @@ from pyteomics import mass
 from seq_to_first_iso import __version__
 
 
-USAGE_ERROR = "Usage: python seq-to-first-iso.py filename " \
-             + "[-o output] [-n aa]"
+USAGE_ERROR = "Usage: python seq-to-first-iso.py filename.tsv sequence_column_name charge_column_name " \
+             + "[-o output] [-u aa]"
 # Note: pyteomics also have U, O, H- and -OH that can be used for sequences
 # which are not supported in this version.
 AMINO_ACIDS = set("ACDEFGHIKLMNPQRSTVWY")
@@ -88,14 +87,14 @@ log.setLevel(logging.INFO)
 # Default isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
 # X is C with default abundance.
-isotopic_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
-                      "C[12]": 0.9893,  "C[13]": 0.0107,
-                      "X[12]": 0.9893,  "X[13]": 0.0107,
-                      "N[14]": 0.99632, "N[15]": 0.00368,
-                      "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
-                      "S[32]": 0.9493,  "S[33]": 0.0076,  "S[34]": 0.0429}
+normal_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
+                    "C[12]": 0.9893,  "C[13]": 0.0107,
+                    "X[12]": 0.9893,  "X[13]": 0.0107,
+                    "N[14]": 0.99632, "N[15]": 0.00368,
+                    "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
+                    "S[32]": 0.9493,  "S[33]": 0.0076,  "S[34]": 0.0429}
 
-C12_abundance = dict(isotopic_abundance)
+C12_abundance = dict(normal_abundance)
 prop = 0.9999
 C12_abundance["C[12]"] = prop
 C12_abundance["C[13]"] = 1-prop
@@ -121,15 +120,17 @@ def user_input(args):
 
     """
     parser = argparse.ArgumentParser(
-        description="Read a file of sequences and creates a tsv file")
+        description="Read a tsv file with sequences and charges and compute intensity of first isotopologues")
 
     # Input file is required as a positional argument.
-    parser.add_argument("input", type=Path, help="file to parse")
+    parser.add_argument("input_file_name", type=Path, help="file to parse in .tsv format")
+    parser.add_argument("sequence_col_name", type=str, help="column name with sequences")
+    parser.add_argument("charge_col_name", type=str, help="column name with charges")
 
     # Optional arguments.
     parser.add_argument("-o", "--output", type=str,
                         help="name of output file")
-    parser.add_argument("-n", "--non-labelled-aa",
+    parser.add_argument("-u", "--unlabelled-aa",
                         metavar="amino_a",
                         help="amino acids with default abundance")
 
@@ -139,24 +140,24 @@ def user_input(args):
     options = parser.parse_args(args)
 
     # Check if file exists.
-    if not options.input.is_file():
-        log.error(f"file {options.input} does not exist in "
-                  f"current directory '{options.input.cwd()}'\n{USAGE_ERROR}"
+    if not options.input_file_name.is_file():
+        log.error(f"file {options.input_file_name} does not exist in "
+                  f"current directory '{options.input_file_name.cwd()}'\n{USAGE_ERROR}"
                   )
         exit()
 
     # Check if amino acids are correct.  If not, tell which one.
-    if not options.non_labelled_aa:
+    if not options.unlabelled_aa:
         # Change to empty list to avoid Nonetype errors.
-        options.non_labelled_aa = []
+        options.unlabelled_aa = []
     else:
-        options.non_labelled_aa = options.non_labelled_aa.split(",")
+        options.unlabelled_aa = options.unlabelled_aa.split(",")
         # Convert amino acids to uppercase for compatibility.
-        options.non_labelled_aa = [char.upper()
-                                   for char in options.non_labelled_aa]
+        options.unlabelled_aa = [char.upper()
+                                   for char in options.unlabelled_aa]
         unrecognized_aa = []
 
-        for arg in options.non_labelled_aa:
+        for arg in options.unlabelled_aa:
             if arg not in AMINO_ACIDS:
                 unrecognized_aa.append(arg)
 
@@ -166,96 +167,63 @@ def user_input(args):
     return options
 
 
-def sequence_parser(file, sep="\t"):
-    r"""Return information on sequences parsed from a file.
+def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
+    r"""Parse input file with peptide sequences and charges.
 
     Parameters
     ----------
-    file : str
+    filename : str
         Filename, the file can either just have sequences for each line or
         can have have annotations and sequences with a separator in-between.
+    sequence_col_name : str
+        Name of column with peptide sequences
+    charge_col_name : str
+        Name of column with peptide charges
     sep : str, optional
         Separator for files with annotations (default is ``\t``).
 
     Returns
     -------
-    dict
-        | Parsed output with "key: values" :
-        |     - "annotations": a list of annotations if any.
-        |     - "raw_sequences": a list of unmodified peptide sequences.
-        |     - "sequences": a list of uppercase peptide sequences.
-        |     - "modifications": a list of lists of PTMs.
-        |     - "ignored_lines": the number of ignored lines.
-
-    Warnings
-    --------
-    The function uses the first line to evaluate if the file has
-    annotations or not, hence a file should have a consistent format.
-
-    Notes
-    -----
-    | Supports Xtandem's Post-Translational Modification notation (0.4.0).
-    | Supports annotations (0.3.0).
+    pandas dataframe
+        | With columns :
+        |     - "sequences": peptide sequences.
+        |     - "charges": peptide charges.
 
     """
-    # Obtain a list of sequences as string if they are amino acids.
-    with open(file, "r") as filin:
-        annotations = []
-        raw_sequences = []
-        sequences = []
-        modifications = []
-        ignored_lines = 0
-        lines = filin.readlines()
+    df = pd.read_csv(filename, sep='\t')
+    line_count, row_count = df.shape
+    log.info(f"Read {filename} with {line_count} lines and {row_count} columns")
+    if sequence_col_name not in df.columns:
+        log.error(f"Column '{sequence_col_name}' not found in data.")
+    if charge_col_name not in df.columns:
+        log.error(f"Column '{charge_col_name}' not found in data.")
+    # Keep only sequences and charges column from original dataframe.
+    df = df[[sequence_col_name, charge_col_name]]
+    # Rename sequences and charges column to internal naming scheme.
+    df.rename(columns={sequence_col_name: "sequence", charge_col_name: "charge"})
+    return df
 
-        if not sep:
-            log.warning("separator is empty, default value '\t' used")
-            sep = "\t"
 
-        # Split the first line to determine if the file has annotations.
-        try:
-            has_annotations = (len(lines[0].split(sep)) > 1)
-        except IndexError:
-            log.warning("the file is empty")
+def check_amino_acids(seq):
+    r""" Check elements of a sequence are known amino acids.
 
-        for line in lines:
-            split_line = line.split(sep)
-
-            if has_annotations:
-                try:
-                    raw_sequence = split_line[1].strip()
-                    annotation = split_line[0].strip()
-                except IndexError:
-                    # The line only has one column.
-                    ignored_lines += 1
-                    continue
-            else:
-                raw_sequence = split_line[0].strip()
-
-            # Convert potential HTML residues.
-            raw_sequence = re.sub("&gt;", ">", raw_sequence)
-            # No verification is done on modifications here.
-            modification = re.findall(XTANDEM_MOD_PATTERN, raw_sequence)
-            # Remove PTMs and capitalize the sequence.
-            sequence = re.sub(XTANDEM_MOD_PATTERN, "", raw_sequence).upper()
-
-            # Verify if sequence is valid and not empty.
-            if not(set(sequence) - AMINO_ACIDS) and sequence:
-                # Everything should be clear.
-                raw_sequences.append(raw_sequence)
-                sequences.append(sequence)
-                modifications.append(modification)
-                if has_annotations:
-                    annotations.append(annotation)
-            else:
-                ignored_lines += 1
-
-    parsed_output = {"annotations": annotations,
-                     "raw_sequences": raw_sequences,
-                     "sequences": sequences,
-                     "modifications": modifications,
-                     "ignored_lines": ignored_lines}
-
-    return parsed_output
+    Parameters
+    ----------
+    seq : str
+        Peptide sequence.
+    
+    Returns
+    -------
+    Tuple of two str
+        | (sequence, "") if the sequence is composed 
+        |                of allowed amino acids
+        | ("", "Unrecognized amino acids") if the sequence is composed 
+        |                                  of unallowed amino acids.
+    """
+    if not(set(seq) - AMINO_ACIDS) and seq:
+        return seq, ""
+    else:
+        return "", "Unrecognized amino acids"
 
 
 def compute_M0(f, a):
@@ -491,41 +459,43 @@ def formula_to_str(composition):
     return formula_str
 
 
-def seq_to_xcomp(sequence_l, sequence_nl):
-    """Take 2 amino acid sequences and return the composition with X.
-
-    The second sequence will have its C replaced by X.
+def convert_atom_C_to_X(sequence):
+    """Replace carbon atom by element X atom in a composition.
 
     Parameters
     ----------
-    sequence_l : str or pyteomics.mass.Composition
-        Sequence or composition with labelled amino acids.
-    sequence_nl : str or pyteomics.mass.Composition
-        Sequence or composition where amino acids are not labelled.
+    sequence : str or pyteomics.mass.Composition
+        Sequence or composition.
 
     Returns
     -------
     pyteomics.mass.Composition
-        Composition with unlabelled carbon as element X.
-
-    Notes
-    -----
-    | The function assumes the second sequence has no terminii (H-, -OH).
-    | Supports pyteomics.mass.Composition as argument (0.5.1).
-    | If mass.Composition objects are provided, the function assumes
-      the terminii of the second composition were already removed.
+        Composition with carbon atoms replaced by element X atoms.
 
     """
-    formula_l = mass.Composition(sequence_l)
-    # Verify if a mass.Composition is provided or not.
-    if isinstance(sequence_nl, mass.Composition):
-        formula_nl = mass.Composition(sequence_nl)
-    else:
-        formula_nl = mass.Composition(parsed_sequence=sequence_nl)
+    # Force input to be a pyteomics.mass.Composition object.
+    formula = mass.Composition(sequence)
+    # Replace C atoms by X atoms.
+    formula["X"] = formula.pop("C", 0)
+    return formula
 
-    formula_nl["X"] = formula_nl.pop("C", 0)
 
-    return formula_l+formula_nl
+def get_charge_composition(charge):
+    """Return the composition of a given charge (only H+).
+
+    Parameters
+    ----------
+    charge : int
+        Peptide charge.
+    
+    Returns
+    -------
+    pyteomics.mass.Composition
+        Composition of the change (H+).
+    """
+    charge_composition = mass.Composition()
+    charge_composition["H"] = charge
+    return charge_composition
 
 
 def get_mods_composition(modifications):
@@ -533,7 +503,7 @@ def get_mods_composition(modifications):
 
     Parameters
     ----------
-    modifications: list of str
+    modifications : list of str
         List of modifications string (corresponding to Unimod titles).
 
     Returns
@@ -559,127 +529,119 @@ def get_mods_composition(modifications):
     return total_mod_composition
 
 
-def seq_to_df(sequences, unlabelled_aa, **kwargs):
-    """Create a dataframe from sequences and return its name.
+def compute_intensities(df_peptides, unlabelled_aa):
+    """Compute isotopologues intensities from peptide sequences.
 
     Parameters
     ----------
-    sequences : list of str
-        List of pure peptide sequences string.
+    df_peptides : pandas.Dataframe
+        Dataframe with column 'sequence' and 'charge'
     unlabelled_aa : container object
         Container of unlabelled amino acids.
-    annotations : list of str, optional
-        List of IDs for the sequences.
-    raw_sequences : list of str, optional
-        List of sequences with Xtandem PTMs.
-    modifications : list of str, optional
-        List of modifications for raw_sequences.
 
     Returns
     -------
     pandas.Dataframe
         | Dataframe with :
-        |                  annotation (optional), sequence, mass,
+        |                  sequence, mass,
                            formula, formula_X, M0_NC, M1_NC, M0_12C, M1_12C.
-
-    Warnings
-    --------
-    If raw_sequence is provided, modifications must also be provided
-    and vice-versa.
+    
+    Notes
+    -----
+    | Supports Xtandem's Post-Translational Modification notation (0.4.0).
 
     """
-    accepted_input = ["sequences", "unlabelled_aa", "annotations",
-                      "raw_sequences", "modifications"]
-    for key in kwargs:
-        if key not in accepted_input:
-            log.warning(f"argument {key} not recognized")
+    log.info("Reading sequences")
+    # Remove potential HTML residues from sequences.
+    df_peptides["sequence"]= df_peptides["sequence"].str.replace("&gt;", ">", case = False)
+    
+    # Extract modifications 
+    df_peptides["modification"] = df_peptides["sequence"].str.findall(XTANDEM_MOD_PATTERN)
+     
+    # Remove modifications and capitalize sequence.
+    df_peptides["sequence_without_mod"] = df_peptides["sequence"].str.replace(XTANDEM_MOD_PATTERN, "").str.upper()
 
-    annotations = kwargs.get("annotations", [])
-    raw_sequences = kwargs.get("raw_sequences", [])
-    modifications = kwargs.get("modifications", [])
+    # Check that sequences without modifications are real peptide sequences.
+    df_peptides["sequence_to_process"], df_peptides["log"] = zip(*df_peptides["sequence_without_mod"].apply(check_amino_acids))
 
-    # Dataframe of sequences.
-    df_peptides = pd.DataFrame({"sequence": sequences})
+    # Split labelled and unlabelled amino acids from peptide sequences.
+    df_peptides["sequence_labelled"], df_peptides["sequence_unlabelled"] = zip(
+            *df_peptides["sequence_to_process"].apply(separate_labelled,
+                                                      unlabelled_aa=unlabelled_aa))
 
-    if raw_sequences or modifications:
-        # Testing if they have the same length as sequences.
-        if len(raw_sequences) != len(sequences):
-            log.warning("raw_sequences and sequences have different "
-                        + "lengths, raw_sequences will be ignored")
-            raw_sequences = []
-            modifications = []
-        elif len(raw_sequences) != len(modifications):
-            log.warning("raw_sequences and modifications have different "
-                        + "lengths, they will be ignored")
-            raw_sequences = []
-            modifications = []
-        else:
-            df_peptides["raw_sequence"] = raw_sequences
-            df_peptides["mods"] = modifications
+    log.info("Computing composition and formula")
+    # Get composition from modifications
+    df_peptides["composition_mod"] = df_peptides["modification"].apply(get_mods_composition)
 
-    if annotations:
-        # We can't associate a sequence with its annotation.
-        if len(sequences) != len(annotations):
-            log.warning("annotations and sequences have different lengths, "
-                        + "annotations will be ignored")
-            annotations = []
-        else:
-            df_peptides["annotation"] = annotations
+    # Get Composition from labelled peptide sequence.
+    df_peptides["composition_labelled"] = df_peptides["sequence_labelled"].apply(mass.Composition)
 
-    # Separate sequences.
-    df_peptides["labelled"], df_peptides["unlabelled"] = zip(
-            *df_peptides["sequence"].apply(separate_labelled,
-                                           unlabelled_aa=unlabelled_aa))
+    # Get Composition from unlabelled peptide sequence.
+    # Unlabelled amino acids are not a real peptide sequence, 
+    # hence the 'parsed_sequence' parameter.
+    # See https://pyteomics.readthedocs.io/en/latest/api/mass.html
+    df_peptides["composition_unlabelled"] = df_peptides["sequence_unlabelled"].apply(lambda x : mass.Composition(parsed_sequence=x))
 
-    # Add formulas and mass  of sequences.
-    log.info("Computing formula")
-    df_peptides["f"] = df_peptides["sequence"].apply(mass.Composition)
-    # Composition, with unlabelled C as element X.
-    df_peptides["f_X"] = df_peptides.apply(lambda x:
-                                           seq_to_xcomp(x["labelled"],
-                                                        x["unlabelled"]),
-                                           axis=1)
+    # Compute peptide composition
+    df_peptides["composition_peptide_neutral"] = (
+          df_peptides["composition_labelled"] 
+        + df_peptides["composition_unlabelled"]
+        + df_peptides["composition_mod"]
+    )
 
-    # Get the composition of the modifications.
-    if modifications:
-        log.info("Computing composition of modifications")
-        df_peptides["m_comp"] = df_peptides["mods"].apply(get_mods_composition)
-        df_peptides["f"] = df_peptides["f"] + df_peptides["m_comp"]
-        df_peptides["f_X"] = df_peptides["f_X"] + df_peptides["m_comp"]
+    df_peptides["composition_peptide_with_charge"] = (
+          df_peptides["composition_peptide_neutral"]
+        + df_peptides["charge"].apply(get_charge_composition)
+    )
 
-    # Formula as a string (instead of mass.Composition).
-    df_peptides["formula"] = df_peptides["f"].apply(formula_to_str)
+    # Compute peptide composition with X.
+    # Carbon atoms from unlabelled peptide are replaced by element X.
+    df_peptides["composition_peptide_with_charge_X"] = (
+          df_peptides["composition_labelled"]
+        + df_peptides["composition_unlabelled"].apply(convert_atom_C_to_X)
+        + df_peptides["composition_mod"]
+        + df_peptides["charge"].apply(get_charge_composition)
+    )
 
-    log.info("Computing mass")
-    df_peptides["mass"] = df_peptides["f"].map(mass.calculate_mass)
+    # Convert formula to string (instead of mass.Composition).
+    df_peptides["formula"] = (
+        df_peptides["composition_peptide_with_charge"].apply(formula_to_str)
+    )
+    df_peptides["formula_X"] = (
+        df_peptides["composition_peptide_with_charge_X"].apply(formula_to_str)
+    )
+
+    # Compute neutral mass
+    log.info("Computing neutral mass")
+    df_peptides["neutral_mass"] = (
+        df_peptides["composition_peptide_neutral"].map(mass.calculate_mass)
+    )
 
     # Add M0 and M1 in normal conditions.
     log.info("Computing M0 and M1")
     # Can use compute_M0_nl with isotopic abundance twice
-    df_peptides["M0_NC"] = df_peptides["f_X"].apply(compute_M0_nl,
-                                                    a=isotopic_abundance)
-    df_peptides["M1_NC"] = df_peptides["f_X"].apply(compute_M1_nl,
-                                                    a=isotopic_abundance)
+    df_peptides["M0_NC"] = (
+        df_peptides["composition_peptide_with_charge_X"].apply(
+                                                        compute_M0_nl,
+                                                        a=normal_abundance)
+    )
+    df_peptides["M1_NC"] = (
+        df_peptides["composition_peptide_with_charge_X"].apply(
+                                                        compute_M1_nl,
+                                                        a=normal_abundance)
+    )    
+    df_peptides["M0_12C"] = (
+        df_peptides["composition_peptide_with_charge_X"].apply(
+                                                        compute_M0_nl,
+                                                        a=C12_abundance)
+    )
+    df_peptides["M1_12C"] = (
+        df_peptides["composition_peptide_with_charge_X"].apply(
+                                                        compute_M1_nl,
+                                                        a=C12_abundance)
+    )
 
-    df_peptides["M0_12C"] = df_peptides["f_X"].apply(compute_M0_nl,
-                                                     a=C12_abundance)
-    df_peptides["M1_12C"] = df_peptides["f_X"].apply(compute_M1_nl,
-                                                     a=C12_abundance)
-
-    # For verification with MIDAs, might be removed.
-    df_peptides["formula_X"] = df_peptides["f_X"].apply(formula_to_str)
-
-    wanted_columns = ["sequence", "mass", "formula", "formula_X",
-                      "M0_NC", "M1_NC", "M0_12C", "M1_12C"]
-    # Take raw sequence if available.
-    if raw_sequences:
-        df_peptides.rename(index=str, columns={"sequence": "pure_seq",
-                                               "raw_sequence": "sequence"},
-                           inplace=True)
-    if annotations:
-        wanted_columns.insert(0, "annotation")
-
-    return df_peptides[wanted_columns]
+    return df_peptides.add_prefix('stfi_')
 
 
 def cli(args=None):
@@ -695,11 +657,6 @@ def cli(args=None):
     None
         Writes a tsv file.
 
-    Raises
-    ------
-    SystemExit
-        If no sequences were found on the file.
-
     Notes
     -----
     Main function of the script, for use with CLI.
@@ -709,34 +666,26 @@ def cli(args=None):
         args = sys.argv[1:]
 
     options = user_input(args)
-    input_file = options.input
-    unlabelled_aa = options.non_labelled_aa
 
-    if unlabelled_aa:
-        log.info(f"Amino acid with default abundance: {unlabelled_aa}")
+    if options.unlabelled_aa:
+        log.info(f"Amino acid with default abundance: {options.unlabelled_aa}")
 
     log.info("Parsing file")
-    parsed_output = sequence_parser(input_file)
-    sequences = parsed_output["sequences"]
-    # Remove from parsed_output dict.
-    ignored_lines = parsed_output.pop("ignored_lines")
-
-    if not sequences:
-        log.error(f"incorrect format, make sure that lines "
-                  f"in {str(input_file)} are valid sequences of amino acids")
-        exit()
-    if ignored_lines:
-        log.warning(f"{ignored_lines} lines ignored out of "
-                    f"{ignored_lines+len(sequences)}")
+    df = parse_input_file(option.input_file_name,
+                          options.sequence_col_name,
+                          options.charge_col_name)
+    df = compute_intensities(df, options.unlabelled_aa)
 
     # Choose output filename.
     if not options.output:
-        output_file = input_file.stem + "_stfi.tsv"
+        output_file = option.input_file_name.stem + "_stfi.tsv"
     else:
         output_file = options.output + ".tsv"
 
-    df = seq_to_df(unlabelled_aa=unlabelled_aa, **parsed_output)
-    df.to_csv(output_file, sep="\t", index=False)
+    column_of_interest = ["stfi_mass", "stfi_formula", 
+                          "stfi_M0_NC", "stfi_M1_NC", 
+                          "stfi_M0_12C", "stfi_M1_12C"]
+    df["column_of_interest"].to_csv(output_file, sep="\t", index=False)
 
 
 if __name__ == "__main__":
