@@ -1,9 +1,9 @@
-1	VpkER
-2 	LLIDRI
-SEQ
-
-3	FHnK
-4	NEAT
-5	SACFTK
-6	na
-7	BJOUZ
+name    sequence    charge
+seq1	VpkER   3
+seq2 	LLIDRI  2
+seq3    SEQ 1
+seq4    FHnK    2
+seq5	NEAT    3
+seq6	SACFTK  4
+seq7	na  2
+seq8	BJOUZ   1

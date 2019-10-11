@@ -87,14 +87,14 @@ log.setLevel(logging.INFO)
 # Default isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
 # X is C with default abundance.
-normal_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
+natural_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
                     "C[12]": 0.9893,  "C[13]": 0.0107,
                     "X[12]": 0.9893,  "X[13]": 0.0107,
                     "N[14]": 0.99632, "N[15]": 0.00368,
                     "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
                     "S[32]": 0.9493,  "S[33]": 0.0076,  "S[34]": 0.0429}
 
-C12_abundance = dict(normal_abundance)
+C12_abundance = dict(natural_abundance)
 prop = 0.9999
 C12_abundance["C[12]"] = prop
 C12_abundance["C[13]"] = 1-prop
@@ -184,19 +184,26 @@ def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
 
     Returns
     -------
-    pandas dataframe
+    pandas.Dataframe
         | With columns :
-        |     - "sequences": peptide sequences.
-        |     - "charges": peptide charges.
+        |     - "sequence": peptide sequences.
+        |     - "charge": peptide charges.
 
+    Raises
+    ------
+    KeyError
+        If the sequence or charge column is not found.
+    
     """
     df = pd.read_csv(filename, sep='\t')
     line_count, row_count = df.shape
     log.info(f"Read {filename} with {line_count} lines and {row_count} columns")
     if sequence_col_name not in df.columns:
         log.error(f"Column '{sequence_col_name}' not found in data.")
+        raise KeyError(f"Column '{sequence_col_name}' not found in data.")
     if charge_col_name not in df.columns:
         log.error(f"Column '{charge_col_name}' not found in data.")
+        raise KeyError(f"Column '{charge_col_name}' not found in data.")
     # Keep only sequences and charges column from original dataframe.
     df = df[[sequence_col_name, charge_col_name]]
     # Rename sequences and charges column to internal naming scheme.
@@ -217,13 +224,13 @@ def check_amino_acids(seq):
     Tuple of two str
         | (sequence, "") if the sequence is composed 
         |                of allowed amino acids
-        | ("", "Unrecognized amino acids") if the sequence is composed 
+        | ("", "Unrecognized amino acids.") if the sequence is composed 
         |                                  of unallowed amino acids.
     """
     if not(set(seq) - AMINO_ACIDS) and seq:
         return seq, ""
     else:
-        return "", "Unrecognized amino acids"
+        return "", "Unrecognized amino acids."
 
 
 def compute_M0(f, a):
@@ -623,12 +630,12 @@ def compute_intensities(df_peptides, unlabelled_aa):
     df_peptides["M0_NC"] = (
         df_peptides["composition_peptide_with_charge_X"].apply(
                                                         compute_M0_nl,
-                                                        a=normal_abundance)
+                                                        a=natural_abundance)
     )
     df_peptides["M1_NC"] = (
         df_peptides["composition_peptide_with_charge_X"].apply(
                                                         compute_M1_nl,
-                                                        a=normal_abundance)
+                                                        a=natural_abundance)
     )    
     df_peptides["M0_12C"] = (
         df_peptides["composition_peptide_with_charge_X"].apply(

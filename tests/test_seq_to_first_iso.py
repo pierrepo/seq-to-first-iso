@@ -53,7 +53,6 @@ def get_mass():
 
 
 def test_calculate_mass(get_mass):
-
     assert mass.calculate_mass("ACDE") == pytest.approx(436.12639936, REL)
     assert mass.calculate_mass(mass.Composition("ACDE")) == pytest.approx(436.12639936, REL)
     assert mass.calculate_mass(parsed_sequence="ACDE") == pytest.approx(418.115834, REL)
@@ -80,7 +79,7 @@ def test_calculate_mass(get_mass):
 # Tests for seq_to_first_iso.
 def test_constants():
     assert stfi.AMINO_ACIDS == set("ACDEFGHIKLMNPQRSTVWY")
-    assert stfi.isotopic_abundance == {"H[1]": 0.999885, "H[2]": 0.000115,
+    assert stfi.natural_abundance == {"H[1]": 0.999885, "H[2]": 0.000115,
                                        "C[12]": 0.9893, "C[13]": 0.0107,
                                        "X[12]": 0.9893, "X[13]": 0.0107,
                                        "N[14]": 0.99632, "N[15]": 0.00368,
@@ -117,32 +116,40 @@ def test_separation(get_separated_sequence):
         assert result == expected
 
 
-def test_parser():
-    test_file = data_dir.joinpath("sample_sequence.txt")
-    bad_file = data_dir.joinpath("bad_sample_sequence.zip")
+def test_parse_input_file():
+    test_file = data_dir.joinpath("sample_sequence.tsv")
+    bad_file = data_dir.joinpath("bad_sample_sequence.txt")
     expected_sequences = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
 
     with pytest.raises(FileNotFoundError):
-        stfi.sequence_parser("not_a_file")
-    with pytest.raises(UnicodeDecodeError):
-        stfi.sequence_parser(bad_file)
+        stfi.parse_input_file("not_a_file", "sequence", "charge")
+    with pytest.raises(KeyError):
+        stfi.parse_input_file(bad_file, "sequence", "charge")
 
-    assert stfi.sequence_parser(test_file)
+    #assert stfi.parse_input_file(test_file, "sequence", "charge")
 
-    parser_output = stfi.sequence_parser(test_file)
-#    assert type(parser_output) is tuple
-#    assert type(parser_output[0]) is list
-#    assert type(parser_output[1]) is list
-#    assert type(parser_output[2]) is int
-#    assert parser_output[1] == expected_sequences
-#    assert parser_output[2] == 4
-    assert type(parser_output) is dict
-    assert type(parser_output.get("annotations")) is list
-    assert type(parser_output.get("sequences")) is list
-    assert type(parser_output.get("ignored_lines")) is int
-    assert parser_output.get("sequences") == expected_sequences
-    assert parser_output.get("ignored_lines") == 4
+    parser_output = stfi.parse_input_file(test_file, "sequence", "charge")
+    assert type(parser_output) is pd.DataFrame
+    assert parser_output.shape == (8, 2)
 
+
+@pytest.fixture(scope="session")
+def get_amino_acid_sequences():
+    return [("PEPTIDE", ("PEPTIDE", "")),
+            ("ACDE", ("ACDE", "")),
+            ("VPKER", ("VPKER", "")),
+            ("ACDEFGHIKLMNPQRSTVWY", ("ACDEFGHIKLMNPQRSTVWY", "")),
+            ("ACTGZ", ("", "Unrecognized amino acids.")),
+            ("LILI", ("LILI","")),
+            ("AAaag", ("", "Unrecognized amino acids.")),
+            ("JOJO", ("", "Unrecognized amino acids.")),
+            ]
+
+
+def test_check_amino_acids(get_amino_acid_sequences):
+    for data in get_amino_acid_sequences:
+        sequence_input, result = data
+        assert stfi.check_amino_acids(sequence_input) == result
 
 def test_parser_annotation(caplog):
     empty_file = data_dir.joinpath("sample_empty_file.tsv")
@@ -168,10 +175,10 @@ def test_deprecated_computation_isotopologue():
     test_composition = mass.Composition("ACDE")
     stfi.compute_M0 = stfi.seq_to_first_iso.compute_M0
     stfi.compute_M1 = stfi.seq_to_first_iso.compute_M1
-    assert stfi.compute_M0(test_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0(test_composition, stfi.natural_abundance) == pytest.approx(0.77662382, REL)
     assert stfi.compute_M0(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
 
-    assert stfi.compute_M1(test_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1(test_composition, stfi.natural_abundance) == pytest.approx(0.1484942353, REL)
     assert stfi.compute_M1(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
 
 
