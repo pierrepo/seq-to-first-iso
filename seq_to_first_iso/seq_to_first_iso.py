@@ -671,22 +671,25 @@ def cli(args=None):
         log.info(f"Amino acid with default abundance: {options.unlabelled_aa}")
 
     log.info("Parsing file")
-    df = parse_input_file(option.input_file_name,
+    df = parse_input_file(options.input_file_name,
                           options.sequence_col_name,
                           options.charge_col_name)
     df = compute_intensities(df, options.unlabelled_aa)
 
     # Choose output filename.
     if not options.output:
-        output_file = option.input_file_name.stem + "_stfi.tsv"
+        output_file = options.input_file_name.stem + "_stfi.tsv"
     else:
         output_file = options.output + ".tsv"
 
-    column_of_interest = ["stfi_mass", "stfi_formula", 
+    column_of_interest = ["stfi_neutral_mass", "stfi_formula", 
                           "stfi_M0_NC", "stfi_M1_NC", 
                           "stfi_M0_12C", "stfi_M1_12C"]
-    df["column_of_interest"].to_csv(output_file, sep="\t", index=False)
-
+    
+    # Read original file and append STFI data.
+    df_old = pd.read_csv(options.input_file_name, sep='\t')
+    df_new = pd.concat([df_old, df[column_of_interest]], axis=1)
+    df_new.to_csv(output_file, sep="\t", index=False)
 
 if __name__ == "__main__":
     cli()  # pragma: no cover
