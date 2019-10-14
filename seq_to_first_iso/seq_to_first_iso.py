@@ -8,7 +8,7 @@ The Command-Line Interface is defined here.
 Example
 -------
 Running the script directly
-    $ python seq_to_first_iso sequences.txt
+    $ python seq_to_first_iso sequences.tsv sequences charges
 will provide file 'sequences_stfi.tsv'
 
 
@@ -31,7 +31,7 @@ UNIMOD_MODS : pyteomics.mass.Unimod
     Dictionary with Unimods entries.
 USED_ELEMS : str
     String of elements used/recognized by the program.
-isotopic_abundance : dict
+natural_abundance : dict
     Dictionary of isotopic abundances with values taken from MIDAs.
 C12_abundance : dict
     Dictionary of isotopic abundances with C[12] abundance at 0.9999.
@@ -71,7 +71,8 @@ XTANDEM_MOD_PATTERN = re.compile(r"""
                                  """, re.VERBOSE)
 
 UNIMOD_MODS = mass.Unimod()
-# This variable is obsoleted if an natural element shall be named X.
+
+# This variable is obsoleted if an natural element is be named X.
 USED_ELEMS = "CHONPSX"
 
 # Set custom logger.
@@ -84,9 +85,9 @@ log.addHandler(log_handler)
 log.setLevel(logging.INFO)
 
 
-# Default isotopic abundances from MIDAs website:
+# Default natural isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
-# X is C with default abundance.
+# X is C with default natural abundance.
 natural_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
                     "C[12]": 0.9893,  "C[13]": 0.0107,
                     "X[12]": 0.9893,  "X[13]": 0.0107,
@@ -184,7 +185,7 @@ def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
 
     Returns
     -------
-    pandas.Dataframe
+    pandas.DataFrame
         | With columns :
         |     - "sequence": peptide sequences.
         |     - "charge": peptide charges.
@@ -195,7 +196,17 @@ def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
         If the sequence or charge column is not found.
     
     """
-    df = pd.read_csv(filename, sep='\t')
+    if not sep:
+        log.warning("Separator is empty, default value '\t' used.")
+        sep = "\t"
+    try:
+        df = pd.read_csv(filename, sep=sep)
+    except FileNotFoundError:
+        log.error(f"File {filename} not found!")
+        raise FileNotFoundError(f"File {filename} not found!")
+    except pd.errors.EmptyDataError:
+        log.error(f"Cannot read {filename}!")
+        raise Exception(f"Cannot read {filename}!")
     line_count, row_count = df.shape
     log.info(f"Read {filename} with {line_count} lines and {row_count} columns")
     if sequence_col_name not in df.columns:
@@ -541,24 +552,25 @@ def compute_intensities(df_peptides, unlabelled_aa):
 
     Parameters
     ----------
-    df_peptides : pandas.Dataframe
+    df_peptides : pandas.DataFrame
         Dataframe with column 'sequence' and 'charge'
     unlabelled_aa : container object
         Container of unlabelled amino acids.
 
     Returns
     -------
-    pandas.Dataframe
+    pandas.DataFrame
         | Dataframe with :
-        |                  sequence, mass,
-                           formula, formula_X, M0_NC, M1_NC, M0_12C, M1_12C.
+        |                  sequence, charge, 
+        |                  stfi_neutral_mass, stfi_formula, stfi_formula_X,
+        |                  stfi_ M0_NC, stfi_M1_NC, stfi_M0_12C, stfi_M1_12C.
     
     Notes
     -----
     | Supports Xtandem's Post-Translational Modification notation (0.4.0).
 
     """
-    log.info("Reading sequences")
+    log.info("Reading sequences.")
     # Remove potential HTML residues from sequences.
     df_peptides["sequence"]= df_peptides["sequence"].str.replace("&gt;", ">", case = False)
     
@@ -576,7 +588,7 @@ def compute_intensities(df_peptides, unlabelled_aa):
             *df_peptides["sequence_to_process"].apply(separate_labelled,
                                                       unlabelled_aa=unlabelled_aa))
 
-    log.info("Computing composition and formula")
+    log.info("Computing composition and formula.")
     # Get composition from modifications
     df_peptides["composition_mod"] = df_peptides["modification"].apply(get_mods_composition)
 
@@ -662,7 +674,7 @@ def cli(args=None):
     Returns
     -------
     None
-        Writes a tsv file.
+        Write a tsv file.
 
     Notes
     -----
@@ -673,7 +685,7 @@ def cli(args=None):
         args = sys.argv[1:]
 
     options = user_input(args)
-
+    print(options)
     if options.unlabelled_aa:
         log.info(f"Amino acid with default abundance: {options.unlabelled_aa}")
 
@@ -689,12 +701,13 @@ def cli(args=None):
     else:
         output_file = options.output + ".tsv"
 
-    column_of_interest = ["stfi_neutral_mass", "stfi_formula", 
+    column_of_interest = ["stfi_neutral_mass", 
+                          "stfi_formula", "stfi_formula_X",
                           "stfi_M0_NC", "stfi_M1_NC", 
                           "stfi_M0_12C", "stfi_M1_12C"]
     
     # Read original file and append STFI data.
-    df_old = pd.read_csv(options.input_file_name, sep='\t')
+    df_old = pd.read_csv(options.input_file_name, sep="\t")
     df_new = pd.concat([df_old, df[column_of_interest]], axis=1)
     df_new.to_csv(output_file, sep="\t", index=False)
 

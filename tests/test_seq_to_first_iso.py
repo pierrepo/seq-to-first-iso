@@ -116,22 +116,26 @@ def test_separation(get_separated_sequence):
         assert result == expected
 
 
-def test_parse_input_file():
+def test_parse_input_file(caplog):
     test_file = data_dir.joinpath("sample_sequence.tsv")
+    parser_output = stfi.parse_input_file(test_file, "sequence", "charge", sep="")
+    assert "Separator is empty" in caplog.text
+    parser_output = stfi.parse_input_file(test_file, "sequence", "charge")
+    assert type(parser_output) is pd.DataFrame
+    assert parser_output.shape == (8, 2)
+
     bad_file = data_dir.joinpath("bad_sample_sequence.txt")
+    empty_file = data_dir.joinpath("sample_empty_file.tsv")
     expected_sequences = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
 
     with pytest.raises(FileNotFoundError):
         stfi.parse_input_file("not_a_file", "sequence", "charge")
     with pytest.raises(KeyError):
         stfi.parse_input_file(bad_file, "sequence", "charge")
-
-    #assert stfi.parse_input_file(test_file, "sequence", "charge")
-
-    parser_output = stfi.parse_input_file(test_file, "sequence", "charge")
-    assert type(parser_output) is pd.DataFrame
-    assert parser_output.shape == (8, 2)
-
+    
+    with pytest.raises(Exception):
+        stfi.parse_input_file(empty_file, "sequence", "charge")
+    
 
 @pytest.fixture(scope="session")
 def get_amino_acid_sequences():
@@ -151,25 +155,6 @@ def test_check_amino_acids(get_amino_acid_sequences):
         sequence_input, result = data
         assert stfi.check_amino_acids(sequence_input) == result
 
-def test_parser_annotation(caplog):
-    empty_file = data_dir.joinpath("sample_empty_file.tsv")
-    test_file = data_dir.joinpath("sample_sequence.tsv")
-    expected_sequences = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
-
-    empty_output = stfi.sequence_parser(empty_file, sep="")
-    assert "file is empty" in caplog.text
-    assert "separator is empty" in caplog.text
-    # No annotations or sequences were taken.
-    assert empty_output.get("annotations") == empty_output.get("sequences") == []
-
-    parser_output = stfi.sequence_parser(test_file)
-    assert type(parser_output) is dict
-    assert type(parser_output.get("annotations")) is list
-    assert type(parser_output.get("sequences")) is list
-    assert type(parser_output.get("ignored_lines")) is int
-    assert parser_output.get("sequences") == expected_sequences
-    assert parser_output.get("ignored_lines") == 3
-
 
 def test_deprecated_computation_isotopologue():
     test_composition = mass.Composition("ACDE")
@@ -182,35 +167,40 @@ def test_deprecated_computation_isotopologue():
     assert stfi.compute_M1(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
 
 
-def test_formula_X():
-    assert stfi.seq_to_xcomp("ACDE", "") == {'H': 24, 'C': 15, 'O': 9, 'N': 4, 'S': 1}
-    assert stfi.seq_to_xcomp("ACDE", "FGH") == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
-    fgh_comp = mass.Composition(parsed_sequence="FGH")
-    assert stfi.seq_to_xcomp("ACDE", fgh_comp) == {'H': 43, 'C': 15, 'O': 12, 'N': 9, 'S': 1, 'X': 17}
-
-
 def test_computation_isotopologue():
     # Standard formula.
     test_composition = mass.Composition("ACDE")
-    assert stfi.compute_M0_nl(test_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0_nl(test_composition, stfi.natural_abundance) == pytest.approx(0.77662382, REL)
     assert stfi.compute_M0_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
-
-    assert stfi.compute_M1_nl(test_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1_nl(test_composition, stfi.natural_abundance) == pytest.approx(0.1484942353, REL)
     assert stfi.compute_M1_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
-
-    unlabelled_composition = stfi.seq_to_xcomp("AC", "DE")
-    assert stfi.compute_M0_nl(unlabelled_composition, stfi.isotopic_abundance) == pytest.approx(0.77662382, REL)
-    assert stfi.compute_M0_nl(unlabelled_composition, stfi.C12_abundance) == pytest.approx(0.8279079739944033, REL)
-
-    assert stfi.compute_M1_nl(unlabelled_composition, stfi.isotopic_abundance) == pytest.approx(0.1484942353, REL)
-    assert stfi.compute_M1_nl(unlabelled_composition, stfi.C12_abundance) == pytest.approx(0.10507024116588572, REL)
 
 
 def test_string_casting():
     assert stfi.formula_to_str(mass.Composition("ACDE")) == "C15H24O9N4S1"
+    assert stfi.formula_to_str(mass.Composition("PEPTIDE")) == "C34H53O15N7"
+    assert stfi.formula_to_str(mass.Composition("ACDEFGHIKLMNPQRSTVWY")) == "C107H159O30N29S2"
 
-    test_formula_X = stfi.seq_to_xcomp("ACDE", "FGH")
-    assert stfi.formula_to_str(test_formula_X) == "C15H43O12N9S1X17"
+
+def test_convert_atom_C_to_X():
+    assert stfi.convert_atom_C_to_X("ACDE") == mass.Composition({'H': 24, 'O': 9, 'N': 4, 'S': 1, 'X': 15})
+    assert stfi.convert_atom_C_to_X("PEPTIDE") == mass.Composition({'H': 53, 'O': 15, 'N': 7, 'X': 34})
+    assert stfi.convert_atom_C_to_X("ACDEFGHIKLMNPQRSTVWY") == mass.Composition({'H': 159, 'O': 30, 'N': 29, 'S': 2, 'X': 107})
+
+
+@pytest.fixture(scope="session")
+def get_charges():
+    return [(1, mass.Composition({"H":1})),
+            (2, mass.Composition({"H":2})),
+            (3, mass.Composition({"H":3})),
+            (4, mass.Composition({"H":4})),
+            (0, mass.Composition({"H":0})),
+            ]
+
+def test_get_charge_composition(get_charges):
+    get_charge_composition = stfi.seq_to_first_iso.get_charge_composition
+    for charge, target_composition in get_charges:
+        assert get_charge_composition(charge) == target_composition
 
 
 @pytest.fixture(scope="session")
@@ -235,76 +225,23 @@ def test_get_mods_composition(get_mods, caplog):
         assert get_mods_composition(modifications) == expected
 
 
-def test_seq_to_df(caplog):
-#    sequences_given = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
-#    output_file = data_dir.joinpath("output.tsv")
-#    unlabelled_output_file = data_dir.joinpath("unlabelled_output.tsv")
-    # TODO: add dataframe comparison.
-#    assert stfi.seq_to_tsv(sequences_given, unlabelled_aa=[])
-#    assert output_file.is_file()
-#    assert stfi.seq_to_tsv(sequences_given, unlabelled_output_file, unlabelled_aa="AT")
-#    assert unlabelled_output_file.is_file()
-#
-#    assert data_dir.joinpath("reference_sequence.tsv")
-#    assert filecmp.cmp(output_file, data_dir.joinpath("reference_sequence.tsv"), shallow=False)
-#    assert data_dir.joinpath("reference_sequence_AT.tsv")
-#    assert filecmp.cmp(unlabelled_output_file, data_dir.joinpath("reference_sequence_AT.tsv"), shallow=False)
-    # Parse non valid sequence.
-    with pytest.raises(PyteomicsError):
-        stfi.seq_to_df(["b"], [])
-    # Testing  annotations and sequences with different lengths.
-    df = stfi.seq_to_df(["AC"], [], annotations=["id1", "id2"])
-    assert "different lengths" in caplog.text
-    assert type(df) is pd.DataFrame
-    # Annotations and sequences with same length.
-    df = stfi.seq_to_df(["AC"], [], annotations=["id1"])
-    assert type(df) is pd.DataFrame
-
-    # Test verification with modifications
-    no_mod_input = {"sequences": ["A"], "unlabelled_aa":[],
-                    "raw_sequences":["A"], "not_modifications":[]}
-    no_rseq_input = {"sequences": ["A"], "unlabelled_aa":[],
-                     "modifications":["Oxidation"]}
-    stfi.seq_to_df(**no_mod_input)
-    assert "not_modifications not recognized" in caplog.text
-    assert "raw_sequences and modifications have different" in caplog.text
-    stfi.seq_to_df(**no_rseq_input)
-    assert "raw_sequences and sequences have different" in caplog.text
-
-
 def test_cli_parser(caplog):
-    cli_parser = stfi.seq_to_first_iso.user_input
-    test_file = data_dir.joinpath("sample_sequence.txt")
+    user_parser = stfi.seq_to_first_iso.user_input
+    test_file = data_dir.joinpath("sample_sequence.tsv")
 
-    assert cli_parser([str(test_file)])
+    assert user_parser([str(test_file), "sequence", "charge"])
     with pytest.raises(SystemExit):
-        cli_parser(["not_a_file"])
+        user_parser(["not_a_file", "sequence", "charge"])
 
-    minimal_cli = cli_parser([str(test_file)])
-    assert minimal_cli.non_labelled_aa == []
-    # It seems like a space between -n and A here won't be escaped.
-    cli_labelled = cli_parser([str(test_file), "-nA,c"])
-    assert cli_labelled.non_labelled_aa == ["A", "C"]
-    cli_parser([str(test_file), "-nerror"])
-    assert "WARNING" in caplog.text
+    # It seems like a space between -u and A here won't be escaped.
+    cli_labelled = user_parser([str(test_file), "sequence", "charge", "-uA,c"])
+    assert cli_labelled.unlabelled_aa == ["A", "C"]
 
 
 def test_main(caplog):
-    main_cli = stfi.seq_to_first_iso.cli
-    test_file = data_dir.joinpath("sample_sequence.txt")
-    bad_file = data_dir.joinpath("sample_bad_sequence.txt")
+    test_file = data_dir.joinpath("sample_sequence.tsv")
 
-    main_cli([str(test_file), "-nA"])
-    assert "Amino acid" in caplog.text
-    assert "lines ignored" in caplog.text
+    stfi.seq_to_first_iso.cli([str(test_file), "sequence", "charge", "-uA"])
+    assert "Amino acid with default abundance" in caplog.text
     assert Path("sample_sequence_stfi.tsv").is_file()
-
-    main_cli([str(test_file), "-ooutput"])
-    assert Path("output.tsv").is_file()
-
-    with pytest.raises(SystemExit):
-        main_cli([str(bad_file)])
-    with pytest.raises(SystemExit):
-        # Error raised due to not having command line arguments.
-        main_cli([])
-
+    assert filecmp.cmp("sample_sequence_stfi.tsv", data_dir.joinpath("sample_sequence_stfi_ref_A.tsv"), shallow=False)
