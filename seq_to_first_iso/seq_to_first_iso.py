@@ -168,20 +168,58 @@ def user_input(args):
     return options
 
 
-def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
-    r"""Parse input file with peptide sequences and charges.
+def parse_input_file(filename, sep="\t"):
+    r"""Parse input file.
 
     Parameters
     ----------
     filename : str
         Filename, the file can either just have sequences for each line or
         can have have annotations and sequences with a separator in-between.
+    sep : str, optional
+        Separator for files with annotations (default is ``\t``).
+
+    Returns
+    -------
+    pandas.DataFrame
+        | With columns :
+        |     - "sequence": peptide sequences.
+        |     - "charge": peptide charges.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the input file is not found.
+    Exception
+        If the input file cannot be read with pandas.
+    
+    """
+    if not sep:
+        log.warning("Separator is empty, default value '\t' used.")
+        sep = "\t"
+    try:
+        df = pd.read_csv(filename, sep=sep)
+    except FileNotFoundError:
+        log.error(f"File {filename} not found!")
+        raise FileNotFoundError(f"File {filename} not found!")
+    except pd.errors.EmptyDataError:
+        log.error(f"Cannot read {filename}!")
+        raise Exception(f"Cannot read {filename}!")
+    log.info(f"Read {filename}")
+    return df
+
+
+def filter_input_dataframe(df, sequence_col_name, charge_col_name):
+    r"""Filter input file with peptide sequences and charges.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Raw dataframe with all input columns
     sequence_col_name : str
         Name of column with peptide sequences
     charge_col_name : str
         Name of column with peptide charges
-    sep : str, optional
-        Separator for files with annotations (default is ``\t``).
 
     Returns
     -------
@@ -196,19 +234,8 @@ def parse_input_file(filename, sequence_col_name, charge_col_name, sep="\t"):
         If the sequence or charge column is not found.
     
     """
-    if not sep:
-        log.warning("Separator is empty, default value '\t' used.")
-        sep = "\t"
-    try:
-        df = pd.read_csv(filename, sep=sep)
-    except FileNotFoundError:
-        log.error(f"File {filename} not found!")
-        raise FileNotFoundError(f"File {filename} not found!")
-    except pd.errors.EmptyDataError:
-        log.error(f"Cannot read {filename}!")
-        raise Exception(f"Cannot read {filename}!")
     line_count, row_count = df.shape
-    log.info(f"Read {filename} with {line_count} lines and {row_count} columns")
+    log.info(f"Found {line_count} lines and {row_count} columns")
     if sequence_col_name not in df.columns:
         log.error(f"Column '{sequence_col_name}' not found in data.")
         raise KeyError(f"Column '{sequence_col_name}' not found in data.")
@@ -572,13 +599,13 @@ def compute_intensities(df_peptides, unlabelled_aa):
     """
     log.info("Reading sequences.")
     # Remove potential HTML residues from sequences.
-    df_peptides["sequence"]= df_peptides["sequence"].str.replace("&gt;", ">", case = False)
+    df_peptides["sequence_clean"] = df_peptides["sequence"].str.replace("&gt;", ">", case = False)
     
     # Extract modifications 
-    df_peptides["modification"] = df_peptides["sequence"].str.findall(XTANDEM_MOD_PATTERN)
+    df_peptides["modification"] = df_peptides["sequence_clean"].str.findall(XTANDEM_MOD_PATTERN)
      
     # Remove modifications and capitalize sequence.
-    df_peptides["sequence_without_mod"] = df_peptides["sequence"].str.replace(XTANDEM_MOD_PATTERN, "").str.upper()
+    df_peptides["sequence_without_mod"] = df_peptides["sequence_clean"].str.replace(XTANDEM_MOD_PATTERN, "").str.upper()
 
     # Check that sequences without modifications are real peptide sequences.
     df_peptides["sequence_to_process"], df_peptides["log"] = zip(*df_peptides["sequence_without_mod"].apply(check_amino_acids))
@@ -690,10 +717,11 @@ def cli(args=None):
         log.info(f"Amino acid with default abundance: {options.unlabelled_aa}")
 
     log.info("Parsing file")
-    df = parse_input_file(options.input_file_name,
-                          options.sequence_col_name,
-                          options.charge_col_name)
-    df = compute_intensities(df, options.unlabelled_aa)
+    df_raw = parse_input_file(options.input_file_name)
+    df_filtered = filter_input_dataframe(df_raw,
+                                         options.sequence_col_name,
+                                         options.charge_col_name )
+    df = compute_intensities(df_filtered, options.unlabelled_aa)
 
     # Choose output filename.
     if not options.output:

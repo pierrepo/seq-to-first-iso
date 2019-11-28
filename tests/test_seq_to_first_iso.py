@@ -118,24 +118,32 @@ def test_separation(get_separated_sequence):
 
 def test_parse_input_file(caplog):
     test_file = data_dir.joinpath("sample_sequence.tsv")
-    parser_output = stfi.parse_input_file(test_file, "sequence", "charge", sep="")
+    parser_output = stfi.parse_input_file(test_file, sep="")
     assert "Separator is empty" in caplog.text
-    parser_output = stfi.parse_input_file(test_file, "sequence", "charge")
+    parser_output = stfi.parse_input_file(test_file)
     assert type(parser_output) is pd.DataFrame
-    assert parser_output.shape == (8, 2)
-
-    bad_file = data_dir.joinpath("bad_sample_sequence.txt")
-    empty_file = data_dir.joinpath("sample_empty_file.tsv")
-    expected_sequences = ["VPKER", "LLIDRI", "FHNK", "NEAT", "SACFTK", "NA"]
+    assert parser_output.shape == (8, 3)
 
     with pytest.raises(FileNotFoundError):
-        stfi.parse_input_file("not_a_file", "sequence", "charge")
-    with pytest.raises(KeyError):
-        stfi.parse_input_file(bad_file, "sequence", "charge")
-    
+        stfi.parse_input_file("not_a_file")
+
+    empty_file = data_dir.joinpath("sample_empty_file.tsv")
     with pytest.raises(Exception):
-        stfi.parse_input_file(empty_file, "sequence", "charge")
-    
+        stfi.parse_input_file(empty_file)
+
+
+def test_filter_input_dataframe(caplog):
+    test_file = data_dir.joinpath("sample_sequence.tsv")
+    parser_output = stfi.parse_input_file(test_file)
+    filter_output = stfi.filter_input_dataframe(parser_output, "sequence", "charge")
+    assert type(filter_output) is pd.DataFrame
+    assert filter_output.shape == (8, 2)
+
+    bad_file = data_dir.joinpath("bad_sample_sequence.txt")
+    with pytest.raises(ValueError):
+        parser_output = stfi.parse_input_file(bad_file)
+        stfi.parse_input_file(parser_output)
+
 
 @pytest.fixture(scope="session")
 def get_amino_acid_sequences():

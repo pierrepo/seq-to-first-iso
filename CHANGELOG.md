@@ -4,6 +4,7 @@
 - Simplify interface
 - Take .tsv as input file
 - Take peptide sequence and charge as input data (from input file)
+- Check input file and input dataframe
   
 **0.5.1** (2019-07-10)
 
