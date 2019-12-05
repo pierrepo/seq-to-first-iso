@@ -5,11 +5,7 @@
 !sample*
 
 # output files
-*.tsv
-!reference*
-!tests/test_data/sample*
-!notebooks/peptides_stfi.tsv
-!notebooks/peptides_mod.tsv
+*_stfi.tsv
 
 # Files for packaging
 build/
