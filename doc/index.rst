@@ -3,18 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
 Welcome to seq-to-first-iso's documentation!
 ============================================
 
 **Version** |release|
 
-Seq-to-first-iso computes the first two isotopologues intensity from peptide sequences.
+Seq-to-first-iso computes the first two isotopologues intensity from peptide sequences and charges.
 
 It differentiates labelled and unlabelled amino acids with a 99.99 % 12C enrichment.
 
-If you want to install seq-to-first-iso, use::
 
-    pip install seq-to-first-iso 
+Installation
+============
+
+To install ``seq-to-first-iso``, use::
+
+    pip install seq-to-first-iso
 
 
 User manual
