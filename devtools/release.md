@@ -25,6 +25,14 @@ Before any release, double-check all tests had run successfully:
 $ make test-coverage
 ```
 
+## Linting
+
+Also check code complies with PEP 8 and PEP 257:
+```
+$ make lint
+```
+
+
 
 ## Update version number
 
