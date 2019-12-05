@@ -6,6 +6,7 @@
 - Take peptide sequence and charge as input data (from input file)
 - Check input file and input dataframe
 - Comply with PEP 8 and PEP 257
+- Update API and CLI demo notebooks
   
 **0.5.1** (2019-07-10)
 
@@ -18,7 +19,7 @@
 - Flag for version number in CLI
 - Jupyter notebook with Binder environment for demonstrations
 - Documentation on Read the Docs
-- Disponibility on conda
+- Conda availability
 
 *Changed*
 - **Breaking change** : changed seq_to_midas() to seq_to_xcomp()
