@@ -1,4 +1,4 @@
-{% set version = "0.5.1" %}
+{% set version = "1.0.0" %}
 
 package:
   name: seq-to-first-iso
