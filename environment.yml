@@ -16,6 +16,7 @@ dependencies:
   - pydocstyle
   - pylint
   - twine
+  - bioconda-utils
   - bumpversion
   - pytest
   - pytest-cov
