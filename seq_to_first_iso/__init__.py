@@ -1,6 +1,6 @@
+"""Compute intensities of the first two isotopologue.
 
-"""Compute intensities of the first two isotopologue 
-from peptide sequences and charges.
+Use peptide sequences and charges.
 
 The program computes M0 and M1 and differentiate labelled
 (with a 99.99 % C[12] enrichment) and unlabelled amino acids.
@@ -17,7 +17,6 @@ NC means Normal Condition, 12C means C[12] enrichment condition.
 
 Example
 -------
-
 Running the script after installation
 
     $ seq-to-first-iso sequences.tsv sequence_column_name charge_column_name
@@ -42,8 +41,8 @@ __email__ = "pierre.poulain@cupnet.net"
 from .seq_to_first_iso import (AMINO_ACIDS,
                                XTANDEM_MOD_PATTERN,
                                UNIMOD_MODS,
-                               natural_abundance,
-                               C12_abundance,
+                               NATURAL_ABUNDANCE,
+                               C12_ABUNDANCE,
                                parse_input_file,
                                filter_input_dataframe,
                                check_amino_acids,
@@ -60,8 +59,8 @@ from .seq_to_first_iso import (AMINO_ACIDS,
 __all__ = ["AMINO_ACIDS",
            "XTANDEM_MOD_PATTERN",
            "UNIMOD_MODS",
-           "natural_abundance",
-           "C12_abundance",
+           "NATURAL_ABUNDANCE",
+           "C12_ABUNDANCE",
            "parse_input_file",
            "filter_input_dataframe",
            "check_amino_acids",

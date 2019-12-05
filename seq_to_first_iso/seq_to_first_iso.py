@@ -1,9 +1,10 @@
 """Main module of seq_to_first_iso.
 
-Provide function to compute M0 and M1 with labelled and unlabelled amino acids
+Provide functions to compute M0 and M1 intensities
+with labelled and unlabelled amino acids
 for the case of a 99.99 % C[12] enrichment.
-The Command-Line Interface is defined here.
 
+The command line interface is also defined here.
 
 Example
 -------
@@ -31,9 +32,9 @@ UNIMOD_MODS : pyteomics.mass.Unimod
     Dictionary with Unimods entries.
 USED_ELEMS : str
     String of elements used/recognized by the program.
-natural_abundance : dict
+NATURAL_ABUNDANCE : dict
     Dictionary of isotopic abundances with values taken from MIDAs.
-C12_abundance : dict
+C12_ABUNDANCE : dict
     Dictionary of isotopic abundances with C[12] abundance at 0.9999.
 log : logging.Logger
     Logger outputting in text terminals.
@@ -79,9 +80,9 @@ USED_ELEMS = "CHONPSX"
 
 # Set custom logger.
 log = logging.getLogger(__name__)
-log_handler = logging.StreamHandler()
 log_formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s: %(message)s",
                                   "%Y-%m-%d, %H:%M:%S")
+log_handler = logging.StreamHandler()
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 log.setLevel(logging.INFO)
@@ -90,17 +91,17 @@ log.setLevel(logging.INFO)
 # Default natural isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
 # X is C with default natural abundance.
-natural_abundance = {"H[1]": 0.999885, "H[2]": 0.000115,
+NATURAL_ABUNDANCE = {"H[1]": 0.999885, "H[2]": 0.000115,
                      "C[12]": 0.9893, "C[13]": 0.0107,
                      "X[12]": 0.9893, "X[13]": 0.0107,
                      "N[14]": 0.99632, "N[15]": 0.00368,
                      "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
                      "S[32]": 0.9493, "S[33]": 0.0076, "S[34]": 0.0429}
 
-C12_abundance = dict(natural_abundance)
-prop = 0.9999
-C12_abundance["C[12]"] = prop
-C12_abundance["C[13]"] = 1-prop
+C12_ABUNDANCE = dict(NATURAL_ABUNDANCE)
+C12_PROPORTION = 0.9999
+C12_ABUNDANCE["C[12]"] = C12_PROPORTION
+C12_ABUNDANCE["C[13]"] = 1-C12_PROPORTION
 
 
 def user_input(args):
@@ -189,39 +190,38 @@ def parse_input_file(filename, sep="\t"):
     Returns
     -------
     pandas.DataFrame
-        | With columns :
-        |     - "sequence": peptide sequences.
-        |     - "charge": peptide charges.
 
     Raises
     ------
     FileNotFoundError
         If the input file is not found.
+        Exception chaining is explicitly suppressed (from None).
     Exception
         If the input file cannot be read with pandas.
+        Exception chaining is explicitly suppressed (from None).
 
     """
     if not sep:
         log.warning("Separator is empty, default value '\t' used.")
         sep = "\t"
     try:
-        df = pd.read_csv(filename, sep=sep)
+        df_input = pd.read_csv(filename, sep=sep)
     except FileNotFoundError:
         log.error(f"File {filename} not found!")
-        raise FileNotFoundError(f"File {filename} not found!")
+        raise FileNotFoundError(f"File {filename} not found!") from None
     except pd.errors.EmptyDataError:
         log.error(f"Cannot read {filename}!")
-        raise Exception(f"Cannot read {filename}!")
+        raise Exception(f"Cannot read {filename}!") from None
     log.info(f"Read {filename}")
-    return df
+    return df_input
 
 
-def filter_input_dataframe(df, sequence_col_name, charge_col_name):
+def filter_input_dataframe(dataframe, sequence_col_name, charge_col_name):
     r"""Filter input file with peptide sequences and charges.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    dataframe : pandas.DataFrame
         Raw dataframe with all input columns
     sequence_col_name : str
         Name of column with peptide sequences
@@ -241,20 +241,19 @@ def filter_input_dataframe(df, sequence_col_name, charge_col_name):
         If the sequence or charge column is not found.
 
     """
-    line_count, row_count = df.shape
+    line_count, row_count = dataframe.shape
     log.info(f"Found {line_count} lines and {row_count} columns")
-    if sequence_col_name not in df.columns:
+    if sequence_col_name not in dataframe.columns:
         log.error(f"Column '{sequence_col_name}' not found in data.")
         raise KeyError(f"Column '{sequence_col_name}' not found in data.")
-    if charge_col_name not in df.columns:
+    if charge_col_name not in dataframe.columns:
         log.error(f"Column '{charge_col_name}' not found in data.")
         raise KeyError(f"Column '{charge_col_name}' not found in data.")
     # Keep only sequences and charges column from original dataframe.
-    df = df[[sequence_col_name, charge_col_name]]
+    dataframe = dataframe[[sequence_col_name, charge_col_name]]
     # Rename sequences and charges column to internal naming scheme.
-    df.rename(columns={sequence_col_name: "sequence",
-                       charge_col_name: "charge"})
-    return df
+    return dataframe.rename(columns={sequence_col_name: "sequence",
+                                     charge_col_name: "charge"})
 
 
 def check_amino_acids(seq):
@@ -276,21 +275,20 @@ def check_amino_acids(seq):
     """
     if not(set(seq) - AMINO_ACIDS) and seq:
         return seq, ""
-    else:
-        return "", "Unrecognized amino acids."
+    return "", "Unrecognized amino acids."
 
 
-def compute_M0(f, a):
-    """Return the monoisotopic abundance M0 of a sequence with its formula.
+def compute_M0(formula, abundance):
+    """Compute intensity of the first isotopologue M0.
 
     Parameters
     ----------
-    f : pyteomics.mass.Composition
-        Chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}.
-    a : dict
-        Dictionary of abundances of isotopes, in the format:
-        {element_name[isotope_number]: relative abundance, ..}.
+    formula : pyteomics.mass.Composition
+        Chemical formula, as a dict of the number of atoms for each element:
+        {element_name: number_of_atoms, ...}.
+    abundance : dict
+        Dictionary of abundances of isotopes:
+        {"element_name[isotope_number]": relative abundance, ..}.
 
     Returns
     -------
@@ -302,22 +300,27 @@ def compute_M0(f, a):
     Unused. Use compute_M0_nl instead.
 
     """
-    M0 = a["C[12]"]**f["C"] * a["H[1]"]**f["H"] * a["N[14]"]**f["N"] \
-        * a["O[16]"]**f["O"] * a["S[32]"]**f["S"]
-    return M0
+    M0_intensity = (
+        abundance["C[12]"]**formula["C"]
+        * abundance["H[1]"]**formula["H"]
+        * abundance["N[14]"]**formula["N"]
+        * abundance["O[16]"]**formula["O"]
+        * abundance["S[32]"]**formula["S"]
+    )
+    return M0_intensity
 
 
-def compute_M1(f, a):
-    """Compute abundance of second isotopologue M1 from its formula.
+def compute_M1(formula, abundance):
+    """Compute intensity of the second isotopologue M1.
 
     Parameters
     ----------
-    f : pyteomics.mass.Composition
-        Chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}.
-    a : dict
-        Dictionary of abundances of isotopes, in the format:
-        {element_name[isotope_number]: relative abundance, ..}.
+    formula : pyteomics.mass.Composition
+        Chemical formula, as a dict of the number of atoms for each element:
+        {element_name: number_of_atoms, ...}.
+    abundance : dict
+        Dictionary of abundances of isotopes:
+        {"element_name[isotope_number]": relative abundance, ..}.
 
     Returns
     -------
@@ -329,39 +332,39 @@ def compute_M1(f, a):
     Unused. Use compute_M1_nl instead.
 
     """
-    M1 = (
-        (f["C"] * a["C[12]"]**(f["C"]-1)
-         * a["C[13]"]
-         * a["H[1]"]**f["H"]
-         * a["N[14]"]**f["N"]
-         * a["O[16]"]**f["O"]
-         * a["S[32]"]**f["S"])
+    M1_intensity = (
+        (formula["C"] * abundance["C[12]"]**(formula["C"]-1)
+         * abundance["C[13]"]
+         * abundance["H[1]"]**formula["H"]
+         * abundance["N[14]"]**formula["N"]
+         * abundance["O[16]"]**formula["O"]
+         * abundance["S[32]"]**formula["S"])
 
-        + (f["H"] * a["C[12]"]**f["C"]
-           * a["H[1]"]**(f["H"]-1) * a["H[2]"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**f["S"])
+        + (formula["H"] * abundance["C[12]"]**formula["C"]
+           * abundance["H[1]"]**(formula["H"]-1) * abundance["H[2]"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**formula["S"])
 
-        + (f["N"] * a["C[12]"]**f["C"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**(f["N"]-1) * a["N[15]"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**f["S"])
+        + (formula["N"] * abundance["C[12]"]**formula["C"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**(formula["N"]-1) * abundance["N[15]"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**formula["S"])
 
-        + (f["O"] * a["C[12]"]**f["C"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**(f["O"]-1) * a["O[17]"]
-           * a["S[32]"]**f["S"])
+        + (formula["O"] * abundance["C[12]"]**formula["C"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**(formula["O"]-1) * abundance["O[17]"]
+           * abundance["S[32]"]**formula["S"])
 
-        + (f["S"] * a["C[12]"]**f["C"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**(f["S"]-1) * a["S[33]"])
+        + (formula["S"] * abundance["C[12]"]**formula["C"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**(formula["S"]-1) * abundance["S[33]"])
     )
-    return M1
+    return M1_intensity
 
 
 def separate_labelled(sequence, unlabelled_aa):
@@ -392,17 +395,19 @@ def separate_labelled(sequence, unlabelled_aa):
     return "".join(labelled_seq), "".join(unlabelled_seq)
 
 
-def compute_M0_nl(f, a):
-    """Return the monoisotopic abundance M0 of a formula with mixed labels.
+def compute_M0_nl(formula, abundance):
+    """Compute intensity of the first isotopologue M0.
+
+    Handle element X with specific abundance.
 
     Parameters
     ----------
-    f : pyteomics.mass.Composition
-        Chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}.
-    a : dict
-        Dictionary of abundances of isotopes, in the format:
-        {element_name[isotope_number]: relative abundance, ..}.
+    formula : pyteomics.mass.Composition
+        Chemical formula, as a dict of the number of atoms for each element:
+        {element_name: number_of_atoms, ...}.
+    abundance : dict
+        Dictionary of abundances of isotopes:
+        {"element_name[isotope_number]": relative abundance, ..}.
 
     Returns
     -------
@@ -414,22 +419,30 @@ def compute_M0_nl(f, a):
     X represents C with default isotopic abundance.
 
     """
-    M0 = a["C[12]"]**f["C"] * a["X[12]"]**f["X"] * a["H[1]"]**f["H"] \
-        * a["N[14]"]**f["N"] * a["O[16]"]**f["O"] * a["S[32]"]**f["S"]
-    return M0
+    M0_intensity = (
+        abundance["C[12]"]**formula["C"]
+        * abundance["X[12]"]**formula["X"]
+        * abundance["H[1]"]**formula["H"]
+        * abundance["N[14]"]**formula["N"]
+        * abundance["O[16]"]**formula["O"]
+        * abundance["S[32]"]**formula["S"]
+    )
+    return M0_intensity
 
 
-def compute_M1_nl(f, a):
-    """Compute abundance of second isotopologue M1 from its formula.
+def compute_M1_nl(formula, abundance):
+    """Compute intensity of the second isotopologue M1.
+
+    Handle element X with specific abundance.
 
     Parameters
     ----------
-    f : pyteomics.mass.Composition
-        Chemical formula, as a dict of counts for each element:
-        {element_name: count_of_element_in_sequence, ...}.
-    a : dict
-        Dictionary of abundances of isotopes, in the format:
-        {element_name[isotope_number]: relative abundance, ..}.
+    formula : pyteomics.mass.Composition
+        Chemical formula, as a dict of the number of atoms for each element:
+        {element_name: number_of_atoms, ...}.
+    abundance : dict
+        Dictionary of abundances of isotopes:
+        {"element_name[isotope_number]": relative abundance, ..}.
 
     Returns
     -------
@@ -441,46 +454,46 @@ def compute_M1_nl(f, a):
     X represents C with default isotopic abundance.
 
     """
-    M1 = (
-        (f["C"] * a["C[12]"]**(f["C"]-1)
-         * a["C[13]"]
-         * a["X[12]"]**f["X"]
-         * a["H[1]"]**f["H"]
-         * a["N[14]"]**f["N"]
-         * a["O[16]"]**f["O"]
-         * a["S[32]"]**f["S"])
-        + (f["X"] * a["C[12]"]**f["C"]
-           * a["X[12]"]**(f["X"]-1) * a["X[13]"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**f["S"])
-        + (f["H"] * a["C[12]"]**f["C"]
-           * a["X[12]"]**f["X"]
-           * a["H[1]"]**(f["H"]-1) * a["H[2]"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**f["S"])
-        + (f["N"] * a["C[12]"]**f["C"]
-           * a["X[12]"]**f["X"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**(f["N"]-1) * a["N[15]"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**f["S"])
-        + (f["O"] * a["C[12]"]**f["C"]
-           * a["X[12]"]**f["X"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**(f["O"]-1) * a["O[17]"]
-           * a["S[32]"]**f["S"])
-        + (f["S"] * a["C[12]"]**f["C"]
-           * a["X[12]"]**f["X"]
-           * a["H[1]"]**f["H"]
-           * a["N[14]"]**f["N"]
-           * a["O[16]"]**f["O"]
-           * a["S[32]"]**(f["S"]-1) * a["S[33]"])
+    M1_intensity = (
+        (formula["C"] * abundance["C[12]"]**(formula["C"]-1)
+         * abundance["C[13]"]
+         * abundance["X[12]"]**formula["X"]
+         * abundance["H[1]"]**formula["H"]
+         * abundance["N[14]"]**formula["N"]
+         * abundance["O[16]"]**formula["O"]
+         * abundance["S[32]"]**formula["S"])
+        + (formula["X"] * abundance["C[12]"]**formula["C"]
+           * abundance["X[12]"]**(formula["X"]-1) * abundance["X[13]"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**formula["S"])
+        + (formula["H"] * abundance["C[12]"]**formula["C"]
+           * abundance["X[12]"]**formula["X"]
+           * abundance["H[1]"]**(formula["H"]-1) * abundance["H[2]"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**formula["S"])
+        + (formula["N"] * abundance["C[12]"]**formula["C"]
+           * abundance["X[12]"]**formula["X"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**(formula["N"]-1) * abundance["N[15]"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**formula["S"])
+        + (formula["O"] * abundance["C[12]"]**formula["C"]
+           * abundance["X[12]"]**formula["X"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**(formula["O"]-1) * abundance["O[17]"]
+           * abundance["S[32]"]**formula["S"])
+        + (formula["S"] * abundance["C[12]"]**formula["C"]
+           * abundance["X[12]"]**formula["X"]
+           * abundance["H[1]"]**formula["H"]
+           * abundance["N[14]"]**formula["N"]
+           * abundance["O[16]"]**formula["O"]
+           * abundance["S[32]"]**(formula["S"]-1) * abundance["S[33]"])
     )
-    return M1
+    return M1_intensity
 
 
 def formula_to_str(composition):
@@ -580,7 +593,7 @@ def get_mods_composition(modifications):
     return total_mod_composition
 
 
-def compute_intensities(df_peptides, unlabelled_aa):
+def compute_intensities(df_peptides, unlabelled_aa=[]):
     """Compute isotopologues intensities from peptide sequences.
 
     Parameters
@@ -692,19 +705,19 @@ def compute_intensities(df_peptides, unlabelled_aa):
     # Can use compute_M0_nl with isotopic abundance twice
     df_peptides["M0_NC"] = (
         df_peptides["composition_peptide_with_charge_X"]
-        .apply(compute_M0_nl, a=natural_abundance)
+        .apply(compute_M0_nl, abundance=NATURAL_ABUNDANCE)
     )
     df_peptides["M1_NC"] = (
         df_peptides["composition_peptide_with_charge_X"]
-        .apply(compute_M1_nl, a=natural_abundance)
+        .apply(compute_M1_nl, abundance=NATURAL_ABUNDANCE)
     )
     df_peptides["M0_12C"] = (
         df_peptides["composition_peptide_with_charge_X"]
-        .apply(compute_M0_nl, a=C12_abundance)
+        .apply(compute_M0_nl, abundance=C12_ABUNDANCE)
     )
     df_peptides["M1_12C"] = (
         df_peptides["composition_peptide_with_charge_X"]
-        .apply(compute_M1_nl, a=C12_abundance)
+        .apply(compute_M1_nl, abundance=C12_ABUNDANCE)
     )
 
     return df_peptides.add_prefix('stfi_')
@@ -741,7 +754,7 @@ def cli(args=None):
     df_filtered = filter_input_dataframe(df_raw,
                                          options.sequence_col_name,
                                          options.charge_col_name)
-    df = compute_intensities(df_filtered, options.unlabelled_aa)
+    df_processed = compute_intensities(df_filtered, options.unlabelled_aa)
 
     # Choose output filename.
     if not options.output:
@@ -756,7 +769,7 @@ def cli(args=None):
 
     # Read original file and append STFI data.
     df_old = pd.read_csv(options.input_file_name, sep="\t")
-    df_new = pd.concat([df_old, df[column_of_interest]], axis=1)
+    df_new = pd.concat([df_old, df_processed[column_of_interest]], axis=1)
     df_new.to_csv(output_file, sep="\t", index=False)
 
 

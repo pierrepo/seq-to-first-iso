@@ -79,16 +79,16 @@ def test_calculate_mass(get_mass):
 # Tests for seq_to_first_iso.
 def test_constants():
     assert stfi.AMINO_ACIDS == set("ACDEFGHIKLMNPQRSTVWY")
-    assert stfi.natural_abundance == {"H[1]": 0.999885, "H[2]": 0.000115,
+    assert stfi.NATURAL_ABUNDANCE == {"H[1]": 0.999885, "H[2]": 0.000115,
                                        "C[12]": 0.9893, "C[13]": 0.0107,
                                        "X[12]": 0.9893, "X[13]": 0.0107,
                                        "N[14]": 0.99632, "N[15]": 0.00368,
                                        "O[16]": 0.99757, "O[17]": 0.00038, "O[18]": 0.00205,
                                        "S[32]": 0.9493, "S[33]": 0.0076, "S[34]": 0.0429}
 
-    assert stfi.C12_abundance["C[12]"] == pytest.approx(0.9999, rel=REL)
-    assert stfi.C12_abundance["C[13]"] == pytest.approx(0.0001, rel=REL)
-    assert {k: v for k, v in stfi.C12_abundance.items()
+    assert stfi.C12_ABUNDANCE["C[12]"] == pytest.approx(0.9999, rel=REL)
+    assert stfi.C12_ABUNDANCE["C[13]"] == pytest.approx(0.0001, rel=REL)
+    assert {k: v for k, v in stfi.C12_ABUNDANCE.items()
             if k not in ["C[12]", "C[13]"]} == {"H[1]": 0.999885, "H[2]": 0.000115,
                                                 "X[12]": 0.9893, "X[13]": 0.0107,
                                                 "N[14]": 0.99632, "N[15]": 0.00368,
@@ -168,20 +168,20 @@ def test_deprecated_computation_isotopologue():
     test_composition = mass.Composition("ACDE")
     stfi.compute_M0 = stfi.seq_to_first_iso.compute_M0
     stfi.compute_M1 = stfi.seq_to_first_iso.compute_M1
-    assert stfi.compute_M0(test_composition, stfi.natural_abundance) == pytest.approx(0.77662382, REL)
-    assert stfi.compute_M0(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
+    assert stfi.compute_M0(test_composition, stfi.NATURAL_ABUNDANCE) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0(test_composition, stfi.C12_ABUNDANCE) == pytest.approx(0.911253268, REL)
 
-    assert stfi.compute_M1(test_composition, stfi.natural_abundance) == pytest.approx(0.1484942353, REL)
-    assert stfi.compute_M1(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
+    assert stfi.compute_M1(test_composition, stfi.NATURAL_ABUNDANCE) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1(test_composition, stfi.C12_ABUNDANCE) == pytest.approx(0.0277650369575, REL)
 
 
 def test_computation_isotopologue():
     # Standard formula.
     test_composition = mass.Composition("ACDE")
-    assert stfi.compute_M0_nl(test_composition, stfi.natural_abundance) == pytest.approx(0.77662382, REL)
-    assert stfi.compute_M0_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.911253268, REL)
-    assert stfi.compute_M1_nl(test_composition, stfi.natural_abundance) == pytest.approx(0.1484942353, REL)
-    assert stfi.compute_M1_nl(test_composition, stfi.C12_abundance) == pytest.approx(0.0277650369575, REL)
+    assert stfi.compute_M0_nl(test_composition, stfi.NATURAL_ABUNDANCE) == pytest.approx(0.77662382, REL)
+    assert stfi.compute_M0_nl(test_composition, stfi.C12_ABUNDANCE) == pytest.approx(0.911253268, REL)
+    assert stfi.compute_M1_nl(test_composition, stfi.NATURAL_ABUNDANCE) == pytest.approx(0.1484942353, REL)
+    assert stfi.compute_M1_nl(test_composition, stfi.C12_ABUNDANCE) == pytest.approx(0.0277650369575, REL)
 
 
 def test_string_casting():
