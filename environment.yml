@@ -12,6 +12,7 @@ dependencies:
   - pyteomics
   - matplotlib
   - pandas
+  - jupyterlab
   - pycodestyle
   - pydocstyle
   - pylint
