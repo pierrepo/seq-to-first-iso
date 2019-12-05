@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://github.com/pierrepo/seq-to-first-iso/archive/v{{ version }}.tar.gz
-  sha256: b349d14da26a49129fc317dcbc1fbddddfe1b614c9ea40eb5ff19918e76f2c10
+  sha256: e5e47ba6aac0ca6ce570ce418f9f1cd3796d7fac5715f3f15b36b8b71dfc7a80
 
 build:
   noarch: python
@@ -35,10 +35,11 @@ about:
   license: BSD 3-Clause License
   license_family: BSD
   license_file: LICENSE.txt
-  summary: "Compute first two isotopologues intensity from peptide sequence and charge"
+  summary: "Compute first two isotopologues intensity from peptide sequences and charges"
   description: |
-    Seq-to-first-iso is a Python package that computes isotopologues M0 and M1
-    of peptides with a 99.99 % 12C enrichment for quantification by SLIM-labeling.
+    Seq-to-first-iso is a Python package that computes the first two isotopologues 
+    intensities M0 and M1 from peptide sequences and charges, with a 99.99% 12C 
+    enrichment for quantification by SLIM-labeling.
     It simulates auxotrophies by differentiating labelled and unlabelled
     amino acids.
   doc_url: https://seq-to-first-iso.readthedocs.io/
