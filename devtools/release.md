@@ -46,7 +46,7 @@ $ git push origin --tags
 ```
 
 
-## Publish in PyPI
+## Publish package in PyPI
 
 Create the file `$HOME/.pypirc`:
 ```
@@ -84,7 +84,7 @@ On [GitHub release page](https://github.com/pierrepo/seq-to-first-iso/releases) 
 - Hit the *Publish Release* button.
 
 
-## Publish in bioconda
+## Publish package in bioconda
 
 Following this doc: https://bioconda.github.io/contributor/updating.html
 Calculate sha256 sum for the latest release archive:
@@ -114,6 +114,12 @@ bioconda-utils: error: invalid choice: 'update'
 ```
 
 However, it seems bioconda package is automatically updated upon new release on GitHub...
+
+
+Bioconda package: https://anaconda.org/bioconda/seq-to-first-iso
+
+Guidelines for bioconda recipes: https://bioconda.github.io/contributor/guidelines.html
+
 
 
 ## Zenodo integration
