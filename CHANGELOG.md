@@ -1,6 +1,8 @@
 # Changelog
 
 **Dev**
+
+**1.1.0** (2019-12-19)
 - Add export_to_knime() function
 
 **1.0.0** (2019-12-05)
