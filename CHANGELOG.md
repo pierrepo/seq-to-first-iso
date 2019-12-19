@@ -1,6 +1,7 @@
 # Changelog
 
 **Dev**
+- Add export_to_knime() function
 
 **1.0.0** (2019-12-05)
 - Simplify interface

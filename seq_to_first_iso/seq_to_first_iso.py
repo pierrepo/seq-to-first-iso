@@ -78,6 +78,12 @@ UNIMOD_MODS = mass.Unimod()
 # This variable is obsoleted if an natural element is be named X.
 USED_ELEMS = "CHONPSX"
 
+# Columns of interest for export
+COLUMNS_OF_INTEREST = ["stfi_neutral_mass",
+                       "stfi_formula", "stfi_formula_X",
+                       "stfi_M0_NC", "stfi_M1_NC",
+                       "stfi_M0_12C", "stfi_M1_12C"]
+
 # Set custom logger.
 log = logging.getLogger(__name__)
 log_formatter = logging.Formatter("[%(asctime)s] %(levelname)-8s: %(message)s",
@@ -86,7 +92,6 @@ log_handler = logging.StreamHandler()
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 log.setLevel(logging.INFO)
-
 
 # Default natural isotopic abundances from MIDAs website:
 # https://www.ncbi.nlm.nih.gov/CBBresearch/Yu/midas/index.html .
@@ -606,10 +611,7 @@ def compute_intensities(df_peptides, unlabelled_aa=[]):
     Returns
     -------
     pandas.DataFrame
-        | Dataframe with :
-        |                  sequence, charge,
-        |                  stfi_neutral_mass, stfi_formula, stfi_formula_X,
-        |                  stfi_ M0_NC, stfi_M1_NC, stfi_M0_12C, stfi_M1_12C.
+        | Dataframe with all computed values, compositions and formulas.
 
     Notes
     -----
@@ -762,16 +764,31 @@ def cli(args=None):
     else:
         output_file = options.output + ".tsv"
 
-    column_of_interest = ["stfi_neutral_mass",
-                          "stfi_formula", "stfi_formula_X",
-                          "stfi_M0_NC", "stfi_M1_NC",
-                          "stfi_M0_12C", "stfi_M1_12C"]
-
     # Read original file and append STFI data.
     df_old = pd.read_csv(options.input_file_name, sep="\t")
-    df_new = pd.concat([df_old, df_processed[column_of_interest]], axis=1)
+    df_new = pd.concat([df_old, df_processed[COLUMNS_OF_INTEREST]], axis=1)
     df_new.to_csv(output_file, sep="\t", index=False)
 
 
+def export_to_knime(df_init, df_processed):
+    """Export and merged computed intensities.
+
+    Parameters
+    ----------
+    df_init : pandas.DataFrame
+        Input / initial dataframe.
+    df_processed : pandas.DataFrame
+        Dataframe with all computed values.
+
+    Returns
+    -------
+    pandas.DataFrame
+        | Dataframe with COLUMNS_OF_INTEREST.
+
+    """
+    df_new = pd.concat([df_init, df_processed[COLUMNS_OF_INTEREST]], axis=1)
+    return df_new
+
+
 if __name__ == "__main__":
-    cli()  # pragma: no cover
+    cli()  # pragma: no cover.
