@@ -1,20 +1,32 @@
 # KNIME configuration
 
 You can install and use seq-to-first-iso with
-the Analytics platform [KNIME](https://docs.knime.com/) to process data from SLIM-labeling.
+the [KNIME](https://docs.knime.com/) Analytics Platform to process data from SLIM-labeling.
 
 Requirements:
   - KNIME
   - conda
   - a little bit of Python knowledge
 
-(Note: if you wish to use pandas > 0.23, you need to upgrade KNIME to 3.7.2 at least)
+This guide is for KNIME 3.7.2 only.
 
 
-## Set Python with KNIME
+## Install (Ana)conda
 
-You need to install and configure a Python extension.<br>
+Install the latest version of [Anaconda](https://www.anaconda.com/) with Python 3.x.
+
+
+## Install KNIME
+
+Install KNIME 3.7.2. You can download this version [here](https://www.knime.com/download-previous-versions).
+
+
+## Set up Python for KNIME
+
+You need to install and configure a Python extension in KNIME.
+
 This guide is adapted from the [3.7 Python installation guide](https://docs.knime.com/2018-12/python_installation_guide/index.html) from KNIME.
+
 
 ### Set up the conda environment
 
@@ -22,148 +34,121 @@ This guide is adapted from the [3.7 Python installation guide](https://docs.knim
 
 If conda was not added to the PATH environment variable during the installation, you have to configure your shell to use the `conda` commands:
 
-- You can add the PATH to the folder containing conda,
-the command in *CMD* should look like:
-
-```
- set PATH=%PATH%;C:<PATH_WHERE_YOU_INSTALLED_CONDA>\Scripts
-```
-
-By default `<PATH_WHERE_YOU_INSTALLED_CONDA>` is `C:\Users\<Username>\<CONDA_INSTALLATION>` where `<Username>` is the Windows username and `<CONDA_INSTALLATION>` the conda installer used (e.g: "Miniconda3", "Anaconda4" ...).<br>
-This command only works for the current command prompt and you will have to type it again if you want to use conda in a new command prompt.
-
-- If you want *CMD* to always recognize conda, you will have to add conda to the system environment. One way to do it is with the command prompt:
 ```
  setx PATH=%PATH%;C:<PATH_WHERE_YOU_INSTALLED_CONDA>\Scripts
 ```
 
+By default `<PATH_WHERE_YOU_INSTALLED_CONDA>` is `C:\Users\<Username>\<CONDA_INSTALLATION>` where `<Username>` is the Windows username and `<CONDA_INSTALLATION>` is the name of the conda installer (e.g: "Anaconda3").
+
 
 #### Create a conda environment
 
-In the GitHub repository, go to *knime/environment-knime.yml* and download the [raw version](https://raw.githubusercontent.com/pierrepo/seq-to-first-iso/master/knime/environment-knime.yml) of the file (*Right click → Save as ...*).
+Download the environment file [*knime/environment-knime.yml*](https://raw.githubusercontent.com/pierrepo/seq-to-first-iso/master/knime/environment-knime.yml (*Right click → Save as ...*).
 
 ![](img/knime_conda_yaml.png)
 
-Then in the directory where *environment-knime.yml* was downloaded open a shell/*Anaconda prompt* and use:
+In the directory where *environment-knime.yml* has been downloaded, open a shell/*Anaconda prompt* and use:
 
 ```shell
 conda env create -f environment-knime.yml
 ```
-*Note: to move within folders with a shell use the `cd` command.*<br>
-Now if you do
+
+The command
 
 ```shell
 conda env list
 ```
 
-you should see `seq-to-first-iso-knime` in the environments.
+should now list `seq-to-first-iso-knime` in available environments.
 
-#### Create a start script (KNIME <4.0)
 
-For versions of KNIME lower than 4.0, a launch script is needed.<br>
+#### Create a start script
+
 Create a small script to start the conda environment by using the [templates defined by KNIME](https://docs.knime.com/2018-12/python_installation_guide/index.html#_creating_a_start_script_for_python).<br>
 In our case `<ENVIRONMENT_NAME>` is `seq-to-first-iso-knime` while
 `<PATH_WHERE_YOU_INSTALLED_ANACONDA>` depend on the user's conda configuration and operating sytem.
 
-To test if your script works, try to execute it:
-- For Windows, double-click on it
-- For Linux/Mac, make your file executable
-  ```
-  chmod gou+x <script_name>
-  ```
-  then execute it with
-  ```
-  ./<script_name>
-  ```
+For windows, here is an example of such a script (`conda_env.bat`):
+```
+@REM Adapt the folder in the PATH to your system
+@SET PATH=%USERPROFILE%\Miniconda3\Scripts;%PATH%
+@CALL activate seq-to-first-iso-knime || ECHO Activating python environment failed
+@python %*
+```
 
 ### Configure the Python extension
 
-In the KNIME interface, go to *File → Install KNIME Extensions*
+In the KNIME interface, go to *File → Install KNIME Extensions*,
 then search for *Python Integration* to find the KNIME Python Integration.  
 
 ![](img/knime_python_integration.png)
 
-*KNIME Python extension in the Install window*
+Select and install this extension.
 
-Now you just need to configure the Python executable KNIME will use.<br>
-Go into *File → Preferences → KNIME → Python* then in the Python 3 subsection, paste the absolute path to your start script.<br>
-*e.g: Windows path `C:\Documents\<script_name>`, Unix path `home/<user>/<script_name>`.* <br>
+Then, go ot the configuration menu *File → Preferences → KNIME → Python*. In the Python 3 subsection, paste the absolute path to your start script.
 
-For KNIME 4.X, you only need to write the path to the conda installation directory (your `<PATH_WHERE_YOU_INSTALLED_CONDA>`) and select *seq-to-first-iso-knime* in the dropdown menu for Python 3.
+*e.g: Windows path `C:\Documents\<script_name>`*
 
-Next use Python 3 as default, then Apply and close.
+Select, Python 3 as default, then Apply and close.
 
 If everything went alright, you should now be able to use Python script nodes with KNIME.
 
 
-
 ## Use seq-to-first-iso with KNIME
 
-**Warning**: the tutorial assumes you use seq-to-first-iso 0.5.0,
-functions in other versions might differ. If you want to use other versions, you have to make sure [the changes across versions](https://github.com/pierrepo/seq-to-first-iso/blob/master/CHANGELOG.md) will not break your workflow.
+**Warning**: this tutorial assumes you use the latest version of seq-to-first-iso.
 
-The following steps are mostly examples, you can adapt them for your needs.
+The following steps are made of examples, adapt them to your needs.
 
-### If the file is not parsed
+We assumes that:
 
-You can use the parsing provided by seq-to-first-iso if you want to read from a formatted file (one sequence per line).
-
-Create a Python scripting node by going in the Node Repository then *Scripting → Python → Python Source*. Then configure the node.
-
-```python
-import seq_to_first_iso as stfi
-
-# Parse the file, change <PATH_TO_YOUR_FILE> to your file path.
-parsed_output = stfi.sequence_parser("<PATH_TO_YOUR_FILE>")
-# Get rid of ignored_lines for seq_to_df.
-parsed_output.pop("ignored_lines")
-
-# List of unlabelled amino acids, change if you need.
-unlabelled_aa = ["A", "C"]
-
-# The name output_table will inform KNIME that
-# the variable is an output table.
-output_table = stfi.seq_to_df(unlabelled_aa=unlabelled_aa,
-                              **parsed_output)
-```
-
-![](img/knime_minimal_python_source.png)
-
-*Minimal implementation of a Python node without prior input in KNIME*
-
-### If peptides are already in a table
-
-If you already have a table with peptide sequences, you can feed it to function seq_to_df() to get the output dataframe
+- `input_table_1` contains (if any) unlabeled amino acids,
+- `input_table_2` contains peptide sequences (column `pep_seq`) and charges (column `pep_charge`).
 
 Create a Python scripting node by going in the Node Repository then *Scripting → Python → Python Script (1⇒1)*. The node will receive a table as an input.
 
 ```python
-from seq_to_first_iso import seq_to_df
+import pandas as pd
+import seq_to_first_iso as stfi
 
-# Copy input table.
-output_table = input_table.copy()
+print(stfi.__version__)
 
-# Set the unlabelled amino acids.
-unlabelled_aa = ["A", "C"]
+# List of unlabelled amino acids from multiple selection node.
+# It is the first node used in this case.
+unlabelled_aa = list(input_table_1.iloc[:, 0])
+print("Amino acids unlabelled:", unlabelled_aa)
 
-# If the input table has more than 2 columns
-# annotations will be the first column while
-# sequences are the second one.
-# Else, we consider the only column contains sequences.
-try:
-  sequences = output_table.iloc[:,1]
-  # Cast pd.Series to list.
-  annotations = list(output_table.iloc[:,0])
-except:
-  sequences = output_table.iloc[:,0]
-  annotations = []
+# Take the content of the parsed file.
+# The name output_table will inform KNIME that
+# the variable is an output table.
+output_table = input_table_2.copy()
 
-output_table = seq_to_df(sequences, unlabelled_aa, annotations=annotations)
+# Extract relevant columns
+df = pd.DataFrame()
+df["sequence"] = output_table["pep_seq"]
+df["charge"] = output_table["pep_charge"]
+
+# Get M0/M1 intensities
+df_peptides = stfi.compute_intensities(df, unlabelled_aa)
+
+# Export final results
+output_table = stfi.export_to_knime(outpu_table, df_peptides)
 ```
-
-In the example above, you may also chose which columns to take into account as arguments for seq_to_df().<br>
-*e.g: The fourth column of your table has lists of post-translational modifications, you can capture the column in a variable with `ptms = list(output_table.iloc[:,3])` then use the variable `output_table = seq_to_df(sequences, unlabelled_aa, modifications=ptms)`.*
 
 ![](img/knime_minimal_table_input.png)
 
-*Minimal implementation of a Python node with table input*
+
+## Update seq-to-first-iso in KNIME
+
+### Update conda environnement 
+
+Open *Anaconda prompt*, then enter the following commands:
+```
+conda activate seq-to-first-iso-knime
+conda install seq-to-first-iso
+```
+
+### Update Python script
+
+Open the Python Script node and check the content of the script is similar to the above code.
+
